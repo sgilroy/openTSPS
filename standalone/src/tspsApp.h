@@ -71,6 +71,7 @@ class tspsApp : public ofBaseApp, public ofxPersonListener {
     
 		int camWidth, camHeight;
 
+        ofImage             camerImage;
 		ofxCvColorImage		colorImg;
 		ofxCvGrayscaleImage	grayImg;	
     	

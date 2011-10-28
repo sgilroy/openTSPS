@@ -52,24 +52,24 @@
 
 #include "ofxTSPSPerson.h"
 #include "ofxTSPSView.h"
-//#include "ofxCv.h"
-#include "ofxOpenCv.h"
+#include "ofxCv.h"
+//#include "ofxOpenCv.h"
 #include "CPUImageFilter.h"
-#include "ofxCvOpticalFlowLK.h"
+//#include "ofxCvOpticalFlowLK.h"
 
 //haar setting
 #define CV_HAAR_FIND_MODE CV_HAAR_FIND_BIGGEST_OBJECT
 
 //dependent libraries
-#include "ofxCvHaarTracker.h"
-#include "ofxContourAnalysis.h"
+//#include "ofxCvHaarTracker.h"
+//#include "ofxContourAnalysis.h"
 #include "ofxTSPSSettings.h"
 #include "ofxTSPSGuiManager.h"
 #include "ofxTSPSTUIOSender.h"
 #include "ofxTSPSOscSender.h"
 #include "ofxTSPSTCPSender.h"
 #include "ofxTSPSWebSocketSender.h"
-#include "ofxCvBlobTracker.h"
+//#include "ofxCvBlobTracker.h"
 #include "ofxTSPSScene.h"
 
 #define DRAW_MODE_NORMAL				0
@@ -103,13 +103,13 @@ public:
 	virtual void personUpdated(ofxTSPSPerson* person, ofxTSPSScene* scene) = 0;
 };
 
-class ofxTSPSPeopleTracker : public ofxCvBlobListener {
+class ofxTSPSPeopleTracker {//: public ofxCvBlobListener {
 	public:
 		//set up and update
 	
 		void setup(int w, int h);				//Call during setup with camera width & height
-		void update(ofxCvColorImage image);		//Call with sequential camera images
-		void update(ofxCvGrayscaleImage image); //Call with sequential camera images
+		void update(ofImage image);		//Call with sequential camera images
+		//void update(ofImage image); //Call with sequential camera images
 		void mousePressed(ofMouseEventArgs &e);	
 		
 		//communication
@@ -207,7 +207,7 @@ class ofxTSPSPeopleTracker : public ofxCvBlobListener {
 		// for getting a color version of the adjusted view image
 		// NOTE:  only works if the adjusted view is currently in color	and not grayscale
 		//        (this parameter can be set in the GUI under the 'views' tab)
-		ofxCvColorImage getAdjustedImageInColor();	
+		ofImage getAdjustedImageInColor();	
 		
 		// for accessing which view is the current view
 		bool inCameraView();
@@ -225,36 +225,36 @@ class ofxTSPSPeopleTracker : public ofxCvBlobListener {
 		void updateSettings();
 		bool isTrackingPerson(int pid);
 			
-		vector<ofxTSPSPerson*> trackedPeople;
+		map<unsigned int,ofxTSPSPerson*> trackedPeople;
 		ofxTSPSScene scene;
-	
-		ofxCvGrayscaleImage	grayImage;
-		ofxCvGrayscaleImage	grayImageWarped;
-		ofxCvGrayscaleImage	grayLastImage;
-		
-		ofxCvGrayscaleImage grayBg;
-		ofxCvGrayscaleImage subtractBg;
-	
-		ofxCvGrayscaleImage graySmallImage;
-		ofxCvGrayscaleImage grayBabyImage;
-		
-		ofxCvColorImage colorImage;
-		ofxCvColorImage colorImageWarped;
+        
+        ofImage cameraImage, warpedImage, backgroundImage, differencedImage;
+        ofxCv::RunningBackground backgroundDifferencer;
+    
+		//ofxCvGrayscaleImage	grayImage;
+		//ofxCvGrayscaleImage	grayImageWarped;
+		//ofxCvGrayscaleImage	grayLastImage;		
+		//ofxCvGrayscaleImage grayBg;
+		//ofxCvGrayscaleImage subtractBg;	
+		//ofxCvGrayscaleImage graySmallImage;
+		//ofxCvGrayscaleImage grayBabyImage;		
+		//ofxCvColorImage colorImage;
+		//ofxCvColorImage colorImageWarped;
 		
 		//more specific CV images for processing
 		
 		CPUImageFilter		grayDiff;
-		ofxCvShortImage		floatBgImg;
+		//ofxCvShortImage		floatBgImg;
 		
 		//coord warping for cropping the camera image
-	
 		//ofxCvCoordWarping coordWarp;
 	
 		// blob tracking things
 		
-		ofxCvContourFinder 	contourFinder;
-		ofxCvBlobTracker persistentTracker;
-		ofxContourAnalysis contourAnalysis;
+        ofxCv::ContourFinder    contourFinder;
+		//ofxCvContourFinder 	contourFinder;
+		//ofxCvBlobTracker persistentTracker;
+		//ofxContourAnalysis      contourAnalysis;
 		int drawMode;
 		
 		//filter variables
@@ -264,12 +264,12 @@ class ofxTSPSPeopleTracker : public ofxCvBlobListener {
 		
 		// haar
 		string lastHaarFile;
-		ofxLABCvHaarFinder	 haarFinder;
-		ofxCvHaarTracker    haarTracker;
+		//ofxLABCvHaarFinder	 haarFinder;
+		//ofxCvHaarTracker    haarTracker;
 		
 		// optical flow
 		
-		ofxCvOpticalFlowLK	opticalFlow;
+		//ofxCvOpticalFlowLK	opticalFlow;
 		
 		// switches for filters
 		ofxTSPSSettings *p_Settings;

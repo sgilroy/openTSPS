@@ -10,6 +10,7 @@ ADDONS_PATH = $(OF_PATH)/addons
 
 //ofxOpenCV
 OFX_OPENCV_HEADERS = "$(ADDONS_PATH)/ofxOpenCv/libs/opencv/include/"
+OFX_CV_HEADERS     = "addons/ofxCv/libs/ofxCv/include/"
 
 //ofxWebUI
 //OFX_WEB_UI_LIBS = "addons/ofxWebUI/libs/libwebsockets/lib/osx/"
@@ -20,7 +21,7 @@ OFX_KINECT_LIBS = "addons/ofxKinect/libs/libusb/osx/libs/usb-1.0.a"
 
 
 // all addons
-OF_ADDON_HEADERS = $(OFX_KINECT_HEADERS) $(OFX_OPENCV_HEADERS) 
+OF_ADDON_HEADERS = $(OFX_KINECT_HEADERS) $(OFX_OPENCV_HEADERS) $(OFX_CV_HEADERS)//$(OFX_OPENCV_HEADERS) 
 OF_ADDON_LIBS = $(OFX_KINECT_LIBS) //$(OFX_WEB_UI_LIBS)
 
 HEADER_SEARCH_PATHS = $(OF_CORE_HEADERS) $(OF_ADDON_HEADERS)

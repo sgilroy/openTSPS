@@ -21,8 +21,8 @@ void tspsApp::setup(){
 	camHeight = 480;
 
     // allocate images + setup people tracker
-	colorImg.allocate(camWidth, camHeight);
-    grayImg.allocate(camWidth, camHeight);
+	//colorImg.allocate(camWidth, camHeight);
+    //grayImg.allocate(camWidth, camHeight);
 	
 	peopleTracker.setup(camWidth, camHeight);
 	peopleTracker.loadFont("fonts/times.ttf", 10);
@@ -111,15 +111,17 @@ void tspsApp::update(){
 	if (bNewFrame){        
         #ifdef _USE_LIVE_VIDEO
         if ( cameraState == CAMERA_KINECT ){   
-			grayImg.setFromPixels(kinect.getDepthPixels(), kinect.width, kinect.height);
+			camerImage.setFromPixels(kinect.getDepthPixels(), camWidth,camHeight, OF_IMAGE_GRAYSCALE);
+            //grayImg.setFromPixels(kinect.getDepthPixels(), kinect.width, kinect.height);
 			colorImg = grayImg;
         } else {
-            colorImg.setFromPixels(vidGrabber.getPixels(), camWidth,camHeight);
+			camerImage.setFromPixels(vidGrabber.getPixels(), camWidth,camHeight, OF_IMAGE_COLOR);
+            //colorImg.setFromPixels(vidGrabber.getPixels(), camWidth,camHeight);
         }
 	    #else
         colorImg.setFromPixels(vidPlayer.getPixels(), camWidth,camHeight);
         #endif
-        peopleTracker.update(colorImg);
+        peopleTracker.update(camerImage);
         
 		//iterate through the people
 		for(int i = 0; i < peopleTracker.totalPeople(); i++){

@@ -48,14 +48,19 @@
 #define OFX_PERSON_OBJECT
 
 #include "ofMain.h"
-#include "ofxOpenCv.h"
+//#include "ofxOpenCv.h"
+#include "ofxCv.h"
 
 class ofxTSPSPerson
 {
 	public: 
-		ofxTSPSPerson(int pid, int oid, ofxCvBlob blob);
+        ofxTSPSPerson(int pid, int index, ofxCv::ContourFinder * contourFinder);    
+        //ofxTSPSPerson(int pid, int oid, ofxCvBlob blob);
 		~ofxTSPSPerson();
-		void update(ofxCvBlob blob, bool dampen);
+        
+        void updateIndex( int index );
+        void update( bool dampen=false);
+        //void update(ofxCvBlob blob, bool dampen);
 
 		//this can be a pointer to whatever you want to store in this person
 		void* customAttributes;
@@ -73,7 +78,8 @@ class ofxTSPSPerson
 		
 		ofPoint centroid; //center of mass of the person
 		ofRectangle boundingRect; //enclosing area
-		vector<ofPoint> contour; //shape contour
+        ofPolyline contour;
+        //vector<ofPoint> contour; //shape contour
 		vector<ofPoint> simpleContour; //simplified shape contour
 		ofPoint velocity; //most recent movement of centroid
 		float area; //area as a scalar size
@@ -92,7 +98,8 @@ class ofxTSPSPerson
         string getString( ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours );
     
 	protected:
-		
+        ofxCv::ContourFinder * contourFinder;
+    
 		bool hasHaar;
 		ofRectangle haarRect;
 		int framesWithoutHaar; //how long have we gone without seeing Haar item

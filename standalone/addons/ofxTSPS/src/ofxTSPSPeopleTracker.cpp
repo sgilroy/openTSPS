@@ -13,6 +13,9 @@
 #define snprintf sprintf_s
 #endif
 
+using namespace ofxCv;
+using namespace cv;
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 #pragma mark Setup
@@ -25,6 +28,7 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	width  = w;
 	height = h;
 	
+    /*
 	grayImage.allocate(width, height);
 	colorImage.allocate(width,height);
 	grayImageWarped.allocate(width, height);
@@ -36,11 +40,22 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	
 	grayLastImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
 	grayBabyImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
-	
+	*/
+    
+    //setup contour finder
+    contourFinder.setMinAreaRadius(1);
+	contourFinder.setMaxAreaRadius(100);
+	contourFinder.setThreshold(15);
+	//contourFinder.getTracker().setMaximumAge(4);
+	//contourFinder.getTracker().setMaximumAge(32);
+    
+    //setup background
+	backgroundDifferencer.setThresholdValue(10);
+    
 	//set up optical flow
-	opticalFlow.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
-	opticalFlow.setCalcStep(5,5);
-	grayLastImage = graySmallImage;
+	//opticalFlow.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
+	//opticalFlow.setCalcStep(5,5);
+	//grayLastImage = graySmallImage;
 	
 	//set tracker
 	bOscEnabled = bTuioEnabled = bTcpEnabled = bWebSocketsEnabled = false;
@@ -68,19 +83,19 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	
 	updateViewRectangles();
 	
-	cameraView.setImage(colorImage);
+	cameraView.setImage(cameraImage);
 	cameraView.setTitle("Camera Source View", "Camera");
 	cameraView.setColor(218,173,90);
 	
-	adjustedView.setImage(grayImageWarped);
+	adjustedView.setImage(warpedImage);
 	adjustedView.setTitle("Adjusted Camera View", "Adjusted");
 	adjustedView.setColor(174,139,138);
 	
-	bgView.setImage(grayBg);
+	bgView.setImage(backgroundImage);
 	bgView.setTitle("Background Reference View", "Background");
 	bgView.setColor(213,105,68);
 		
-	processedView.setImage(grayDiff);
+	processedView.setImage(differencedImage);
 	processedView.setTitle("Differenced View", "Differencing");
 	processedView.setColor(113,171,154);
 	
@@ -89,7 +104,7 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	
 	setActiveView(PROCESSED_VIEW);
 	
-    persistentTracker.setListener( this );
+    //persistentTracker.setListener( this );
 	//updateSettings();
 	lastHaarFile = "";
 }
@@ -102,8 +117,8 @@ void ofxTSPSPeopleTracker::setHaarXMLFile(string haarFile)
 	//check if haar file has changed
 	if(lastHaarFile != haarFile){
 		ofLog(OF_LOG_VERBOSE, "changing haar file to " + haarFile);
-		haarFinder.setup(haarFile);
-		haarTracker.setup(&haarFinder);
+		//haarFinder.setup(haarFile);
+		//haarTracker.setup(&//haarFinder);
 		lastHaarFile = haarFile;
 	}
 }
@@ -160,15 +175,16 @@ void ofxTSPSPeopleTracker::setListener(ofxPersonListener* listener)
 //---------------------------------------------------------------------------
 #pragma mark Track People
 //---------------------------------------------------------------------------
-void ofxTSPSPeopleTracker::update(ofxCvColorImage image)
+void ofxTSPSPeopleTracker::update(ofImage _cameraImage)
 {
-	grayImage = image;
-	colorImage = image;
+	//grayImage = image;
+	//colorImage = image;
+    cameraImage = _cameraImage;
 	updateSettings();
 	trackPeople();
-	
 }
 
+/*
 //---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::update(ofxCvGrayscaleImage image)
 {
@@ -176,7 +192,7 @@ void ofxTSPSPeopleTracker::update(ofxCvGrayscaleImage image)
 	
 	updateSettings();
 	trackPeople();
-}
+}*/
 
 //---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::updateSettings()
@@ -228,208 +244,208 @@ void ofxTSPSPeopleTracker::trackPeople()
 	//-------------------
 		
 	//warp background
-	grayImageWarped.warpIntoMe(grayImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);
-	colorImageWarped.warpIntoMe(colorImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);	
+	// TO:DO
+    warpedImage = cameraImage;
+    
+    //grayImageWarped.warpIntoMe(grayImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);
+	//colorImageWarped.warpIntoMe(colorImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);	
 	
-	graySmallImage.scaleIntoMe(grayImageWarped);
-	grayBabyImage.scaleIntoMe(grayImageWarped);
-	
-	grayDiff = grayImageWarped;
+	//graySmallImage.scaleIntoMe(grayImageWarped);
+	//grayBabyImage.scaleIntoMe(grayImageWarped);
+	//grayDiff = grayImageWarped;
 	
 	//amplify (see cpuimagefilter class)
 	if(p_Settings->bAmplify){
-		grayDiff.amplify(grayDiff, p_Settings->highpassAmp/15.0f);
+        //warpedImage.amplify(warpedImage, p_Settings->highpassAmp/15.0f);
 	}
 	
-	grayImageWarped = grayDiff;
+	//grayImageWarped = grayDiff;
 	
 	//-------------------
 	//BACKGROUND
 	//-------------------
-	
-	//force learn background if there are > 5 blobs (off by default)
-	//JG Disabling this feature for now, 
-	//I think it's a great idea but it needs to be better described and "5" needs to be customizable
-//	if (p_Settings->bSmartLearnBackground == true && contourFinder.nBlobs > 5){
-//		p_Settings->bLearnBackground = true;
-	//	}
-	
+		
 	//learn background (either in reset or additive)
 	if (p_Settings->bLearnBackground){
 		cout << "Learning Background" << endl;
-		grayBg = grayImageWarped;
+		backgroundDifferencer.reset();
+        backgroundDifferencer.update(warpedImage, backgroundImage);
+        backgroundImage.update();
+        //grayBg = grayImageWarped;
 	}
 	
 	//progressive relearn background
-	if (p_Settings->bLearnBackgroundProgressive){
+    // TO:DO
+	/*if (p_Settings->bLearnBackgroundProgressive){
 		if (p_Settings->bLearnBackground) floatBgImg = grayBg;
 		floatBgImg.addWeighted( grayImageWarped, p_Settings->fLearnRate * .00001);
 		grayBg = floatBgImg;
 		//cvConvertScale( floatBgImg.getCvImage(), grayBg.getCvImage(), 255.0f/65535.0f, 0 );       
 		//grayBg.flagImageChanged();			
-	}
+	}*/
 	
-	//printf("track type %d from (%d,%d,%d)\n", p_Settings->trackType, TRACK_ABSOLUTE, TRACK_DARK, TRACK_LIGHT);
+    // set threshold
+    backgroundDifferencer.setThresholdValue( p_Settings->threshold );
+    
 	if(p_Settings->trackType == TRACK_ABSOLUTE){
-		grayDiff.absDiff(grayBg, grayImageWarped);
+        backgroundDifferencer.setDifferenceMode( RunningBackground::ABSOLUTE );
+        //grayDiff.absDiff(grayBg, grayImageWarped);
 	}
 	else{
-		grayDiff = grayImageWarped;
+		//grayDiff = grayImageWarped;
 		if(p_Settings->trackType == TRACK_LIGHT){
+            backgroundDifferencer.setDifferenceMode( RunningBackground::BRIGHTER );            
 			//grayDiff = grayBg - grayImageWarped;
-			cvSub(grayBg.getCvImage(), grayDiff.getCvImage(), grayDiff.getCvImage());
+			//cvSub(grayBg.getCvImage(), grayDiff.getCvImage(), grayDiff.getCvImage());
 		}
 		else if(p_Settings->trackType == TRACK_DARK){ 
-			cvSub(grayDiff.getCvImage(), grayBg.getCvImage(), grayDiff.getCvImage());
+            backgroundDifferencer.setDifferenceMode( RunningBackground::DARKER );            
+			//cvSub(grayDiff.getCvImage(), grayBg.getCvImage(), grayDiff.getCvImage());
 			//grayDiff = grayImageWarped - grayBg;
 		}
-		grayDiff.flagImageChanged();
 	}
+    
+    backgroundDifferencer.update(backgroundImage, differencedImage);
+    differencedImage.update();
 	
 	//-----------------------
 	// IMAGE TREATMENT
 	//-----------------------
-	if(p_Settings->bSmooth){
-		grayDiff.blur((p_Settings->smooth * 2) + 1); //needs to be an odd number
+	if(p_Settings->bSmooth){ // TO:DO
+        //blur();
+		//grayDiff.blur((p_Settings->smooth * 2) + 1); //needs to be an odd number
 	}
 	
 	//highpass filter (see cpuimagefilter class)	
-	if(p_Settings->bHighpass){
-		grayDiff.highpass(p_Settings->highpassBlur, p_Settings->highpassNoise);
+	if(p_Settings->bHighpass){ // TO:DO
+		//grayDiff.highpass(p_Settings->highpassBlur, p_Settings->highpassNoise);
 	}
 	
 	//threshold	
-	grayDiff.threshold(p_Settings->threshold);
+	//grayDiff.threshold(p_Settings->threshold);
 	
 	//-----------------------
 	// TRACKING
 	//-----------------------	
 	//find the optical flow
-	if (p_Settings->bTrackOpticalFlow){
-		opticalFlow.calc(grayLastImage, graySmallImage, 11);
+	if (p_Settings->bTrackOpticalFlow){ // TO:DO
+		//opticalFlow.calc(grayLastImage, graySmallImage, 11);
 	}
 	
 	//accumulate and store all found haar features.
-	vector<ofRectangle> haarRects;
+	/*
+    vector<ofRectangle> haarRects;
 	if(p_Settings->bDetectHaar){
-		haarTracker.findHaarObjects( grayBabyImage );
+		//haarTracker.findHaarObjects( grayBabyImage );
 		float x, y, w, h;
-		while(haarTracker.hasNextHaarItem()){
-			haarTracker.getHaarItemPropertiesEased( &x, &y, &w, &h );
+		while(//haarTracker.hasNextHaarItem()){
+			//haarTracker.getHaarItemPropertiesEased( &x, &y, &w, &h );
 			haarRects.push_back( ofRectangle(x,y,w,h) );
 		}
 	}
+    */
 	
 	char pringString[1024];
-	sprintf(pringString, "found %i haar items this frame", haarRects.size());
+	//sprintf(pringString, "found %i haar items this frame", (int) haarRects.size());
 	ofLog(OF_LOG_VERBOSE, pringString);
 	
-	contourFinder.findContours(grayDiff, p_Settings->minBlob*width*height, p_Settings->maxBlob*width*height, 50, p_Settings->bFindHoles);
-	persistentTracker.trackBlobs(contourFinder.blobs);
+    contourFinder.findContours( cameraImage );
+	//contourFinder.findContours(grayDiff, p_Settings->minBlob*width*height, p_Settings->maxBlob*width*height, 50, p_Settings->bFindHoles);
+	//persistentTracker.trackBlobs(contourFinder.blobs);
 	
-	scene.averageMotion = opticalFlow.flowInRegion(0,0,width,height);
-	scene.percentCovered = 0; 
+    // TO:DO!!!!
+	//scene.averageMotion = opticalFlow.flowInRegion(0,0,width,height);
+	//scene.percentCovered = 0; 
 	
 	// By setting maxVector and minVector outside the following for-loop, blobs do NOT have to be detected first
 	//            before optical flow can begin working.
 	if(p_Settings->bTrackOpticalFlow) {
-		opticalFlow.maxVector = p_Settings->maxOpticalFlow;
-		opticalFlow.minVector = p_Settings->minOpticalFlow;
+		//opticalFlow.maxVector = p_Settings->maxOpticalFlow;
+		//opticalFlow.minVector = p_Settings->minOpticalFlow;
 	}
 	
-	for(int i = 0; i < persistentTracker.blobs.size(); i++){
-		ofxCvTrackedBlob blob = persistentTracker.blobs[i];
-		ofxTSPSPerson* p = getTrackedPerson(blob.id);
-		//somehow we are not tracking this person, safeguard (shouldn't happen)
-		if(NULL == p){
-			ofLog(OF_LOG_WARNING, "ofxPerson::warning. encountered persistent blob without a person behind them\n");
-			continue;
-		}
-		
-		scene.percentCovered += blob.area;
-		
-		//update this person with new blob info
-		p->update(blob, p_Settings->bCentroidDampen);
+    RectTracker& tracker = contourFinder.getTracker();
+    
+    for(int i = 0; i < contourFinder.size(); i++){
+        int id = contourFinder.getLabel(i);
+        if(tracker.existsPrevious(id)) {
+        //for(int i = 0; i < persistentTracker.blobs.size(); i++){
+            //ofxCvTrackedBlob blob = persistentTracker.blobs[i];
+            ofxTSPSPerson* p = trackedPeople[id];
+            //somehow we are not tracking this person, safeguard (shouldn't happen)
+            if(NULL == p){
+                ofLog(OF_LOG_WARNING, "ofxPerson::warning. encountered persistent blob without a person behind them\n");
+                continue;
+            }
+            
+            scene.percentCovered += p->area;
+            
+            //update this person with new blob info
+            p->update(p_Settings->bCentroidDampen);
 
-		//simplify blob for communication
-		contourAnalysis.simplify(p->contour, p->simpleContour, 2.0f);
-		float simplifyAmount = 2.5f;
-		while (p->simpleContour.size() > 100){
-			contourAnalysis.simplify(p->contour, p->simpleContour, simplifyAmount);
-			simplifyAmount += .5f;
-		}
-		//normalize simple contour
-		for (int i=0; i<p->simpleContour.size(); i++){
-			p->simpleContour[i].x /= width;
-			p->simpleContour[i].y /= height;
-		}
-        
-		ofRectangle roi;
-		roi.x		= fmax( (p->boundingRect.x - p_Settings->haarAreaPadding) * TRACKING_SCALE_FACTOR, 0.0f );
-		roi.y		= fmax( (p->boundingRect.y - p_Settings->haarAreaPadding) * TRACKING_SCALE_FACTOR, 0.0f );
-		roi.width	= fmin( (p->boundingRect.width  + p_Settings->haarAreaPadding*2) * TRACKING_SCALE_FACTOR, grayBabyImage.width - roi.x );
-		roi.height	= fmin( (p->boundingRect.height + p_Settings->haarAreaPadding*2) * TRACKING_SCALE_FACTOR, grayBabyImage.width - roi.y );	
+            //simplify blob for communication
+            // TO:DO JUST WITH OFPOLYLINE??
+            //contourAnalysis.simplify(p->contour, p->simpleContour, 2.0f);
+            float simplifyAmount = 2.5f;
+            while (p->simpleContour.size() > 100){
+                //contourAnalysis.simplify(p->contour, p->simpleContour, simplifyAmount);
+                simplifyAmount += .5f;
+            }
+            //normalize simple contour
+            for (int i=0; i<p->simpleContour.size(); i++){
+                p->simpleContour[i].x /= width;
+                p->simpleContour[i].y /= height;
+            }
+            /*
+             TO:DO
+            ofRectangle roi;
+            roi.x		= fmax( (p->boundingRect.x - p_Settings->haarAreaPadding) * TRACKING_SCALE_FACTOR, 0.0f );
+            roi.y		= fmax( (p->boundingRect.y - p_Settings->haarAreaPadding) * TRACKING_SCALE_FACTOR, 0.0f );
+            roi.width	= fmin( (p->boundingRect.width  + p_Settings->haarAreaPadding*2) * TRACKING_SCALE_FACTOR, grayBabyImage.width - roi.x );
+            roi.height	= fmin( (p->boundingRect.height + p_Settings->haarAreaPadding*2) * TRACKING_SCALE_FACTOR, grayBabyImage.width - roi.y );	
+            */
+            //sum optical flow for the person
+            if(p_Settings->bTrackOpticalFlow){
+                //p->opticalFlowVectorAccumulation = opticalFlow.flowInRegion(roi);
+            }
+            
+            //detect haar patterns (faces, eyes, etc)
+            if (p_Settings->bDetectHaar){
+                bool bHaarItemSet = false;
+                    
+                //find the region of interest, expanded by haarArea.
+                //bound by the frame edge
+                //cout << "ROI is " << roi.x << "  " << roi.y << " " << roi.width << "  " << roi.height << endl;
+                bool haarThisFrame = false;
+                /*for(int i = 0; i < haarRects.size(); i++){
+                    ofRectangle hr = haarRects[i];
+                    //check to see if the haar is contained within the bounding rectangle
+                    if(hr.x > roi.x && hr.y > roi.y && hr.x+hr.width < roi.x+roi.width && hr.y+hr.height < roi.y+roi.height){
+                        hr.x /= TRACKING_SCALE_FACTOR;
+                        hr.y /= TRACKING_SCALE_FACTOR;
+                        hr.width /= TRACKING_SCALE_FACTOR;
+                        hr.height /= TRACKING_SCALE_FACTOR;
+                        p->setHaarRect(hr);
+                        haarThisFrame = true;
+                        break;
+                    }
+                }
+                if(!haarThisFrame){
+                    p->noHaarThisFrame();
+                }*/
+            }
+            
+            if(eventListener != NULL){
+                if( p->velocity.x != 0 || p->velocity.y != 0){
+                    eventListener->personMoved(p, &scene);
+                }
+                eventListener->personUpdated(p, &scene);
+            }
+        } else {
+            ofPoint center = toOf(contourFinder.getCenter(i));
+            blobOn( center.x, center.y, id, i );
+        }
 		
-		//sum optical flow for the person
-		if(p_Settings->bTrackOpticalFlow){
-			p->opticalFlowVectorAccumulation = opticalFlow.flowInRegion(roi);
-		}
-		
-		//detect haar patterns (faces, eyes, etc)
-		if (p_Settings->bDetectHaar){
-			bool bHaarItemSet = false;
-				
-			//find the region of interest, expanded by haarArea.
-			//bound by the frame edge
-			//cout << "ROI is " << roi.x << "  " << roi.y << " " << roi.width << "  " << roi.height << endl;
-			bool haarThisFrame = false;
-			for(int i = 0; i < haarRects.size(); i++){
-				ofRectangle hr = haarRects[i];
-				//check to see if the haar is contained within the bounding rectangle
-				if(hr.x > roi.x && hr.y > roi.y && hr.x+hr.width < roi.x+roi.width && hr.y+hr.height < roi.y+roi.height){
-					hr.x /= TRACKING_SCALE_FACTOR;
-					hr.y /= TRACKING_SCALE_FACTOR;
-					hr.width /= TRACKING_SCALE_FACTOR;
-					hr.height /= TRACKING_SCALE_FACTOR;
-					p->setHaarRect(hr);
-					haarThisFrame = true;
-					break;
-				}
-			}
-			if(!haarThisFrame){
-				p->noHaarThisFrame();
-			}
-			/*
-			 //JG 1/28/2010
-			 //This is the prper way to do the Haar, checking one person at a time.
-			 //however this discards the robustness of the haarFinder and 
-			 //makes the whole operation really spotty.  
-			 // The solution is to put more energy into finding out how 
-			 // the haar tracker works to get robust/persistent haar items over time.
-			 //for now we just check the whole screen and see if the haar is contained
-			grayBabyImage.setROI(roi.x, roi.y, roi.width, roi.height);
-			int numFound = haarFinder.findHaarObjects(grayBabyImage, roi);
-			//cout << "found " << numFound << " for this object" << endl;
-			if(numFound > 0) {
-				ofRectangle haarRect = haarFinder.blobs[0].boundingRect;
-				haarRect.x /= TRACKING_SCALE_FACTOR;
-				haarRect.y /= TRACKING_SCALE_FACTOR;
-				haarRect.width /= TRACKING_SCALE_FACTOR;
-				haarRect.height /= TRACKING_SCALE_FACTOR;
-				p->setHaarRect(haarRect);
-			}
-			else {
-				p->noHaarThisFrame();
-			}
-			 */
-		}
-		
-		if(eventListener != NULL){
-			if( p->velocity.x != 0 || p->velocity.y != 0){
-				eventListener->personMoved(p, &scene);
-			}
-			eventListener->personUpdated(p, &scene);
-		}
 	}
 	
 	//normalize it
@@ -440,24 +456,25 @@ void ofxTSPSPeopleTracker::trackPeople()
 	//-----------------------	
     
 	//store the old image
-	grayLastImage = graySmallImage;
+	//grayLastImage = graySmallImage;
 	
 	//update views
 	
-	cameraView.update(colorImage);
+	cameraView.update(cameraImage);
 	if (p_Settings->bAdjustedViewInColor)
-		adjustedView.update(colorImageWarped);
+		adjustedView.update(warpedImage);
 	else
-		adjustedView.update(grayImageWarped);
-	bgView.update(grayBg);
-	processedView.update(grayDiff);
+		adjustedView.update(warpedImage);
+	bgView.update(backgroundImage);
+	processedView.update(differencedImage);
     
 	//-----------------------
 	// COMMUNICATION
 	//-----------------------	
 
-    for (int i = 0; i < trackedPeople.size(); i++){
-        ofxTSPSPerson* p = trackedPeople[i];
+    map<unsigned int,ofxTSPSPerson*>::iterator it;    
+    for (it; it != trackedPeople.end(); ++it){
+        ofxTSPSPerson* p = (*it).second;
         ofPoint centroid = p->getCentroidNormalized(width, height);
 //			if(p_Settings->bUseHaarAsCenter && p->hasHaarRect()){
         
@@ -508,11 +525,12 @@ void ofxTSPSPeopleTracker::trackPeople()
 //---------------------------------------------------------------------------
 #pragma mark Person Management
 //---------------------------------------------------------------------------
-void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int order )
+void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int index )
 {
-	ofxCvTrackedBlob blob = persistentTracker.getById( id );
-	ofxTSPSPerson* newPerson = new ofxTSPSPerson(id, order, blob);
-	trackedPeople.push_back( newPerson );
+	//ofxCvTrackedBlob blob = persistentTracker.getById( id );
+	ofxTSPSPerson* newPerson = new ofxTSPSPerson(id, index, &contourFinder);//order, blob);
+	trackedPeople[id] = newPerson;
+    //trackedPeople.push_back( newPerson );
 	if(eventListener != NULL){
 		eventListener->personEntered(newPerson, &scene);
 	}
@@ -520,7 +538,7 @@ void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int order )
     ofPoint centroid = newPerson->getCentroidNormalized(width, height);
     
 	if(bTuioEnabled){
-		tuioClient.cursorPressed(1.0*x/width, 1.0*y/height, order);
+		tuioClient.cursorPressed(1.0*x/width, 1.0*y/height, id);
 	}
 	if(bOscEnabled){
 		oscClient.personEntered(newPerson, centroid, width, height, p_Settings->bSendOscContours);
@@ -570,26 +588,21 @@ void ofxTSPSPeopleTracker::blobOff( int x, int y, int id, int order )
 		webSocketServer.personWillLeave(p, centroid, width, height, p_Settings->bSendOscContours);
 	}
 	
-	//delete the object and remove it from the vector
-	std::vector<ofxTSPSPerson*>::iterator it;
-	for(it = trackedPeople.begin(); it != trackedPeople.end(); it++){
-		if((*it)->pid == p->pid){
-			trackedPeople.erase(it);
-			delete p;
-			break;
-		}
-	}
+	//delete the object and remove it from the vector    
+    //map<unsigned int,ofxTSPSPerson*>::iterator it;
+    //it=mymap.find(id);
+    trackedPeople.erase(id);
 }
 
 //---------------------------------------------------------------------------
 ofxTSPSPerson* ofxTSPSPeopleTracker::getTrackedPerson( int pid )
-{
-    for( int i = 0; i < trackedPeople.size(); i++ ) {
-        if( trackedPeople[i]->pid == pid ) {
-            return trackedPeople[i];
-        }
-    }
-	return NULL;
+{    
+//    for( int i = 0; i < trackedPeople.size(); i++ ) {
+//        if( trackedPeople[i]->pid == pid ) {
+//            return trackedPeople[i];
+//        }
+//    }
+	return trackedPeople[pid];
 }
 
 //---------------------------------------------------------------------------
@@ -676,7 +689,7 @@ void ofxTSPSPeopleTracker::drawBlobs( float drawWidth, float drawHeight){
 	
 	if (p_Settings->bTrackOpticalFlow){
 		ofSetColor(34,151,210);
-		opticalFlow.draw(drawWidth,drawHeight);
+		//opticalFlow.draw(drawWidth,drawHeight);
 	}					
 	
 	ofPushMatrix();
@@ -684,11 +697,11 @@ void ofxTSPSPeopleTracker::drawBlobs( float drawWidth, float drawHeight){
 	
 	// simpler way to draw contours: contourFinder.draw();
 	
-	for (int i=0; i < trackedPeople.size(); i++){
-		
+    map<unsigned int,ofxTSPSPerson*>::iterator it;    
+    for (it; it != trackedPeople.end(); ++it){		
 		//draw blobs				
-		//if haarfinder is looking at these blobs, draw the area it's looking at
-		ofxTSPSPerson* p = trackedPeople[i];
+		//if //haarFinder is looking at these blobs, draw the area it's looking at
+		ofxTSPSPerson* p = (*it).second;
 		
 		//draw contours 
 		ofPushStyle();
@@ -854,7 +867,9 @@ void ofxTSPSPeopleTracker::addToggle(string name, bool* value)
 //---------------------------------------------------------------------------
 ofxTSPSPerson* ofxTSPSPeopleTracker::personAtIndex(int i)
 {
-	return trackedPeople[i];
+    return NULL;
+    //TO:DO!!!!
+	//return trackedPeople[i];
 }
 
 //---------------------------------------------------------------------------
@@ -1150,8 +1165,9 @@ void ofxTSPSPeopleTracker::updateViewRectangles(){
 
 //---------------------------------------------------------------------------
 // for accessing Optical Flow within a specific region
+// TO:DO
 ofPoint ofxTSPSPeopleTracker::getOpticalFlowInRegion(float x, float y, float w, float h) {
-	return opticalFlow.flowInRegion(x,y,w,h);
+	return 0;//opticalFlow.flowInRegion(x,y,w,h);
 }
 
 
@@ -1185,7 +1201,7 @@ bool ofxTSPSPeopleTracker::inAdjustedView() {
 // for getting a color version of the adjusted view image
 // NOTE:  only works if the adjusted view is currently in color
 //        (this parameter can be set in the GUI under the 'views' tab)
-ofxCvColorImage ofxTSPSPeopleTracker::getAdjustedImageInColor() {
+ofImage ofxTSPSPeopleTracker::getAdjustedImageInColor() {
 	if (p_Settings->bAdjustedViewInColor)
 		return adjustedView.getColorImage();
 }

@@ -8,21 +8,24 @@
  */
 #include "ofxTSPSPerson.h"
 
+using namespace ofxCv;
+using namespace cv;
+
 #define MAX_HAAR_GHOSTFRAMES 15 //how long before we say it's really gone
 
-ofxTSPSPerson::ofxTSPSPerson(int pid, int oid, ofxCvBlob blob)
+ofxTSPSPerson::ofxTSPSPerson(int id, int index, ofxCv::ContourFinder * contourFinder)
 : pid(pid),
-  oid(oid),
+  oid(index),
   age(0),
   hasHaar(false),
   haarRect(ofRectangle(0,0,0,0)),
   opticalFlowVectorAccumulation(ofPoint(0,0)),
-  centroid(blob.centroid),
+  centroid(toOf(contourFinder->getCentroid(index))),
   framesWithoutHaar(0),
   customAttributes(NULL),
   depth(0)
 {
-	update(blob, false);
+	update(false);
 }
 
 ofxTSPSPerson::~ofxTSPSPerson()
@@ -32,19 +35,26 @@ ofxTSPSPerson::~ofxTSPSPerson()
 	}
 }
 
-void ofxTSPSPerson::update(ofxCvBlob blob, bool dampen)
+void ofxTSPSPerson::updateIndex( int index ){
+    oid = index;
+};
+
+void ofxTSPSPerson::update(bool dampen)
 {
+    ofPoint c = toOf(contourFinder->getCentroid(oid));
+    
 	if(dampen){
-		centroid = (centroid * .7) + (blob.centroid * .3);
+		centroid = (centroid * .7) + ( c * .3);
 	}
 	else{
-		centroid = blob.centroid;
+        centroid = c;
+		//centroid = blob.centroid;
 	}
 	
-	velocity	 = blob.centroid - centroid;
-	area		 = blob.area;
-	boundingRect = blob.boundingRect;
-	contour		 = blob.pts; 
+    velocity	 = c - centroid;
+    contour		 = contourFinder->getPolyline(oid);//blob.pts; 
+	area		 = contourFinder->getContourArea(oid);//blob.area;
+	boundingRect = toOf(contourFinder->getBoundingRect(oid));//blob.boundingRect;
 	age++;
 }
 
