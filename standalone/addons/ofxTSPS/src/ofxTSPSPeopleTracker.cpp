@@ -42,14 +42,20 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	grayBabyImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
 	*/
     
+    cameraImage.allocate(width, height, OF_IMAGE_COLOR);
+    warpedImage.allocate(width, height, OF_IMAGE_COLOR);
+    backgroundImage.allocate(width, height, OF_IMAGE_COLOR);
+    differencedImage.allocate(width, height, OF_IMAGE_COLOR);
+    
     //setup contour finder
     contourFinder.setMinAreaRadius(1);
 	contourFinder.setMaxAreaRadius(100);
 	contourFinder.setThreshold(15);
-	//contourFinder.getTracker().setMaximumAge(4);
+	contourFinder.getTracker().setMaximumAge(4);
 	//contourFinder.getTracker().setMaximumAge(32);
     
     //setup background
+	backgroundDifferencer.setLearningTime(900);
 	backgroundDifferencer.setThresholdValue(10);
     
 	//set up optical flow
@@ -305,7 +311,7 @@ void ofxTSPSPeopleTracker::trackPeople()
 		}
 	}
     
-    backgroundDifferencer.update(backgroundImage, differencedImage);
+    backgroundDifferencer.update(differencedImage, backgroundImage);
     differencedImage.update();
 	
 	//-----------------------
@@ -349,7 +355,7 @@ void ofxTSPSPeopleTracker::trackPeople()
 	//sprintf(pringString, "found %i haar items this frame", (int) haarRects.size());
 	ofLog(OF_LOG_VERBOSE, pringString);
 	
-    contourFinder.findContours( cameraImage );
+    contourFinder.findContours( cameraImage) ;//differencedImage );
 	//contourFinder.findContours(grayDiff, p_Settings->minBlob*width*height, p_Settings->maxBlob*width*height, 50, p_Settings->bFindHoles);
 	//persistentTracker.trackBlobs(contourFinder.blobs);
 	
@@ -442,8 +448,9 @@ void ofxTSPSPeopleTracker::trackPeople()
                 eventListener->personUpdated(p, &scene);
             }
         } else {
-            ofPoint center = toOf(contourFinder.getCenter(i));
-            blobOn( center.x, center.y, id, i );
+            ofPoint centroid = toOf(contourFinder.getCentroid(i));
+            blobOn( centroid.x, centroid.y, id, i );
+
         }
 		
 	}
@@ -472,52 +479,54 @@ void ofxTSPSPeopleTracker::trackPeople()
 	// COMMUNICATION
 	//-----------------------	
 
-    map<unsigned int,ofxTSPSPerson*>::iterator it;    
-    for (it; it != trackedPeople.end(); ++it){
-        ofxTSPSPerson* p = (*it).second;
-        ofPoint centroid = p->getCentroidNormalized(width, height);
-//			if(p_Settings->bUseHaarAsCenter && p->hasHaarRect()){
+    if (trackedPeople.size() > 0){
+        map<unsigned int,ofxTSPSPerson*>::iterator it;    
+        for (it=trackedPeople.begin(); it != trackedPeople.end(); ++it){
+            ofxTSPSPerson* p = (*it).second;
+            ofPoint centroid = p->getCentroidNormalized(width, height);
+    //			if(p_Settings->bUseHaarAsCenter && p->hasHaarRect()){
+            
+            if (bTuioEnabled){
+                ofPoint tuioCursor = p->getCentroidNormalized(width, height);
+                tuioClient.cursorDragged( tuioCursor.x, tuioCursor.y, p->oid);
+            }
+            
+            if (bOscEnabled){
+                if( p->velocity.x != 0 || p->velocity.y != 0){
+                    oscClient.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
+                }
+                oscClient.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
+            }
+            
+            if (bTcpEnabled){
+                tcpClient.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
+            }
+            
+            if (bWebSocketsEnabled){
+                webSocketServer.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
+            }
+        }
         
-        if (bTuioEnabled){
-            ofPoint tuioCursor = p->getCentroidNormalized(width, height);
-            tuioClient.cursorDragged( tuioCursor.x, tuioCursor.y, p->oid);
+        if(bTuioEnabled){
+            tuioClient.update();		
         }
         
         if (bOscEnabled){
-            if( p->velocity.x != 0 || p->velocity.y != 0){
-                oscClient.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
-            }
-            oscClient.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
-        }
+            oscClient.ip = p_Settings->oscHost;
+            oscClient.port = p_Settings->oscPort;
+            oscClient.update();
+        };
         
         if (bTcpEnabled){
-            tcpClient.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
+            tcpClient.port = p_Settings->oscPort;
+            tcpClient.update();
+            tcpClient.send();
         }
         
         if (bWebSocketsEnabled){
-            webSocketServer.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
+            //sent automagically
+            webSocketServer.send();
         }
-    }
-    
-	if(bTuioEnabled){
-		tuioClient.update();		
-	}
-	
-	if (bOscEnabled){
-		oscClient.ip = p_Settings->oscHost;
-		oscClient.port = p_Settings->oscPort;
-		oscClient.update();
-	};
-    
-	if (bTcpEnabled){
-		tcpClient.port = p_Settings->oscPort;
-		tcpClient.update();
-		tcpClient.send();
-	}
-    
-    if (bWebSocketsEnabled){
-        //sent automagically
-        webSocketServer.send();
     }
 }
 
@@ -525,8 +534,7 @@ void ofxTSPSPeopleTracker::trackPeople()
 //---------------------------------------------------------------------------
 #pragma mark Person Management
 //---------------------------------------------------------------------------
-void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int index )
-{
+void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int index ){
 	//ofxCvTrackedBlob blob = persistentTracker.getById( id );
 	ofxTSPSPerson* newPerson = new ofxTSPSPerson(id, index, &contourFinder);//order, blob);
 	trackedPeople[id] = newPerson;
@@ -696,90 +704,92 @@ void ofxTSPSPeopleTracker::drawBlobs( float drawWidth, float drawHeight){
 	ofScale(scaleVar, scaleVar);
 	
 	// simpler way to draw contours: contourFinder.draw();
-	
-    map<unsigned int,ofxTSPSPerson*>::iterator it;    
-    for (it; it != trackedPeople.end(); ++it){		
-		//draw blobs				
-		//if //haarFinder is looking at these blobs, draw the area it's looking at
-		ofxTSPSPerson* p = (*it).second;
-		
-		//draw contours 
-		ofPushStyle();
-		ofNoFill();
-		if (p_Settings->bSendOscContours){
-			ofSetHexColor(0x3abb93);
-		} else {
-			ofSetHexColor(0xc4b68e);
-		}
-		ofBeginShape();
-		for( int j=0; j<p->contour.size(); j++ ) {
-			ofVertex( p->contour[j].x, p->contour[j].y );
-		}
-		ofEndShape();
-		ofPopStyle();
-		
-		if(p_Settings->bTrackOpticalFlow){
-			//purple optical flow arrow
-			ofSetHexColor(0xff00ff);
-			//JG Doesn't really provide any helpful information since its so scattered
-//			ofLine(p->centroid.x, 
-//				   p->centroid.y, 
-//				   p->centroid.x + p->opticalFlowVectorAccumulation.x, 
-//				   p->centroid.y + p->opticalFlowVectorAccumulation.y);
-		}
-		
-		ofSetHexColor(0xffffff);							
-		if(p_Settings->bDetectHaar){
-			ofSetHexColor(0xee3523);
-			//draw haar search area expanded 
-			//limit to within data box so it's not confusing
-			/*ofRect(p->boundingRect.x - p_Settings->haarAreaPadding, 
-				   p->boundingRect.y - p_Settings->haarAreaPadding, 
-				   p->boundingRect.width  + p_Settings->haarAreaPadding*2, 
-				   p->boundingRect.height + p_Settings->haarAreaPadding*2);*/
-				
-				ofRectangle haarRect = ofRectangle(p->boundingRect.x - p_Settings->haarAreaPadding, 
-												   p->boundingRect.y - p_Settings->haarAreaPadding, 
-												   p->boundingRect.width  + p_Settings->haarAreaPadding*2, 
-												   p->boundingRect.height + p_Settings->haarAreaPadding*2);
-				if (haarRect.x < 0){
-					haarRect.width += haarRect.x;
-					haarRect.x = 0;					
-				}
-				if (haarRect.y < 0){
-					haarRect.height += haarRect.y;	
-					haarRect.y = 0;
-				}
-				if (haarRect.x + haarRect.width > width) haarRect.width = width-haarRect.x;
-				if (haarRect.y + haarRect.height > height) haarRect.height = height-haarRect.y;
-				ofRect(haarRect.x, haarRect.y, haarRect.width, haarRect.height);
-		}
-		
-		if(p->hasHaarRect()){
-			//draw the haar rect
-			ofSetHexColor(0xee3523);
-			ofRect(p->getHaarRect().x, p->getHaarRect().y, p->getHaarRect().width, p->getHaarRect().height);
-			//haar-detected people get a red square
-			ofSetHexColor(0xfd5f4f);
-		}
-		else {
-			//no haar gets a yellow square
-			ofSetHexColor(0xeeda00);
-		}
-		
-		//draw person
-		ofRect(p->boundingRect.x, p->boundingRect.y, p->boundingRect.width, p->boundingRect.height);
-		
-		//draw centroid
-		ofSetHexColor(0xff0000);
-		ofCircle(p->centroid.x, p->centroid.y, 3);
-		
-		//draw id
-		ofSetHexColor(0xffffff);
-		char idstr[1024];
-		sprintf(idstr, "pid: %d\noid: %d\nage: %d", p->pid, p->oid, p->age );
-		ofDrawBitmapString(idstr, p->centroid.x+8, p->centroid.y);													
-	}
+	cout<<"peeps "<<trackedPeople.size()<<endl;
+    if (trackedPeople.size() > 0){
+        map<unsigned int,ofxTSPSPerson*>::iterator it;    
+        for (it=trackedPeople.begin(); it != trackedPeople.end(); ++it){		
+            //draw blobs				
+            //if //haarFinder is looking at these blobs, draw the area it's looking at
+            ofxTSPSPerson* p = (*it).second;
+            
+            //draw contours 
+            ofPushStyle();
+            ofNoFill();
+            if (p_Settings->bSendOscContours){
+                ofSetHexColor(0x3abb93);
+            } else {
+                ofSetHexColor(0xc4b68e);
+            }
+            ofBeginShape();
+            for( int j=0; j<p->contour.size(); j++ ) {
+                ofVertex( p->contour[j].x, p->contour[j].y );
+            }
+            ofEndShape();
+            ofPopStyle();
+            
+            if(p_Settings->bTrackOpticalFlow){
+                //purple optical flow arrow
+                ofSetHexColor(0xff00ff);
+                //JG Doesn't really provide any helpful information since its so scattered
+    //			ofLine(p->centroid.x, 
+    //				   p->centroid.y, 
+    //				   p->centroid.x + p->opticalFlowVectorAccumulation.x, 
+    //				   p->centroid.y + p->opticalFlowVectorAccumulation.y);
+            }
+            
+            ofSetHexColor(0xffffff);							
+            if(p_Settings->bDetectHaar){
+                ofSetHexColor(0xee3523);
+                //draw haar search area expanded 
+                //limit to within data box so it's not confusing
+                /*ofRect(p->boundingRect.x - p_Settings->haarAreaPadding, 
+                       p->boundingRect.y - p_Settings->haarAreaPadding, 
+                       p->boundingRect.width  + p_Settings->haarAreaPadding*2, 
+                       p->boundingRect.height + p_Settings->haarAreaPadding*2);*/
+                    
+                    ofRectangle haarRect = ofRectangle(p->boundingRect.x - p_Settings->haarAreaPadding, 
+                                                       p->boundingRect.y - p_Settings->haarAreaPadding, 
+                                                       p->boundingRect.width  + p_Settings->haarAreaPadding*2, 
+                                                       p->boundingRect.height + p_Settings->haarAreaPadding*2);
+                    if (haarRect.x < 0){
+                        haarRect.width += haarRect.x;
+                        haarRect.x = 0;					
+                    }
+                    if (haarRect.y < 0){
+                        haarRect.height += haarRect.y;	
+                        haarRect.y = 0;
+                    }
+                    if (haarRect.x + haarRect.width > width) haarRect.width = width-haarRect.x;
+                    if (haarRect.y + haarRect.height > height) haarRect.height = height-haarRect.y;
+                    ofRect(haarRect.x, haarRect.y, haarRect.width, haarRect.height);
+            }
+            
+            if(p->hasHaarRect()){
+                //draw the haar rect
+                ofSetHexColor(0xee3523);
+                ofRect(p->getHaarRect().x, p->getHaarRect().y, p->getHaarRect().width, p->getHaarRect().height);
+                //haar-detected people get a red square
+                ofSetHexColor(0xfd5f4f);
+            }
+            else {
+                //no haar gets a yellow square
+                ofSetHexColor(0xeeda00);
+            }
+            
+            //draw person
+            ofRect(p->boundingRect.x, p->boundingRect.y, p->boundingRect.width, p->boundingRect.height);
+            
+            //draw centroid
+            ofSetHexColor(0xff0000);
+            ofCircle(p->centroid.x, p->centroid.y, 3);
+            
+            //draw id
+            ofSetHexColor(0xffffff);
+            char idstr[1024];
+            sprintf(idstr, "pid: %d\noid: %d\nage: %d", p->pid, p->oid, p->age );
+            ofDrawBitmapString(idstr, p->centroid.x+8, p->centroid.y);													
+        }
+    }
 	ofPopMatrix();
 	ofSetHexColor(0xffffff);				
 	//ofDrawBitmapString("blobs and optical flow", 5, height - 5 );

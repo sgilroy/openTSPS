@@ -19,10 +19,8 @@ void tspsApp::setup(){
 	
 	camWidth = 640;
 	camHeight = 480;
-
+    
     // allocate images + setup people tracker
-	//colorImg.allocate(camWidth, camHeight);
-    //grayImg.allocate(camWidth, camHeight);
 	
 	peopleTracker.setup(camWidth, camHeight);
 	peopleTracker.loadFont("fonts/times.ttf", 10);
@@ -37,8 +35,10 @@ void tspsApp::setup(){
     kinect.init();
     
     // no kinects connected, let's just try to set up the device
+    bKinectConnected = (kinect.numAvailableDevices() >= 1);
+    
     if (kinect.numAvailableDevices() < 1 || !peopleTracker.useKinect()){
-        kinect.clear();        
+        kinect.clear();
         vidGrabber.setVerbose(false);
         vidGrabber.videoSettings();
         vidGrabber.initGrabber(camWidth,camHeight);
@@ -111,17 +111,14 @@ void tspsApp::update(){
 	if (bNewFrame){        
         #ifdef _USE_LIVE_VIDEO
         if ( cameraState == CAMERA_KINECT ){   
-			camerImage.setFromPixels(kinect.getDepthPixels(), camWidth,camHeight, OF_IMAGE_GRAYSCALE);
-            //grayImg.setFromPixels(kinect.getDepthPixels(), kinect.width, kinect.height);
-			colorImg = grayImg;
+			cameraImage.setFromPixels(kinect.getDepthPixels(), camWidth,camHeight, OF_IMAGE_GRAYSCALE);
         } else {
-			camerImage.setFromPixels(vidGrabber.getPixels(), camWidth,camHeight, OF_IMAGE_COLOR);
-            //colorImg.setFromPixels(vidGrabber.getPixels(), camWidth,camHeight);
+			cameraImage.setFromPixels(vidGrabber.getPixels(), camWidth,camHeight, OF_IMAGE_COLOR);
         }
 	    #else
-        colorImg.setFromPixels(vidPlayer.getPixels(), camWidth,camHeight);
+        cameraImage.setFromPixels(vidPlayer.getPixels(), camWidth,camHeight, OF_IMAGE_COLOR);
         #endif
-        peopleTracker.update(camerImage);
+        peopleTracker.update(cameraImage);
         
 		//iterate through the people
 		for(int i = 0; i < peopleTracker.totalPeople(); i++){
@@ -231,6 +228,14 @@ void tspsApp::initVideoInput(){
     
 #ifdef _USE_LIVE_VIDEO
     if ( bKinect ){
+        
+        kinect.init();
+        bKinectConnected = (kinect.numAvailableDevices() >= 1);
+        if (!bKinectConnected){
+            bKinect = false;
+            return;
+        }
+        
         if ( cameraState == CAMERA_VIDEOGRABBER ){
             vidGrabber.close();
             cameraState = CAMERA_NOT_INITED;

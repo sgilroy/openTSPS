@@ -13,18 +13,19 @@ using namespace cv;
 
 #define MAX_HAAR_GHOSTFRAMES 15 //how long before we say it's really gone
 
-ofxTSPSPerson::ofxTSPSPerson(int id, int index, ofxCv::ContourFinder * contourFinder)
+ofxTSPSPerson::ofxTSPSPerson(int id, int index, ofxCv::ContourFinder * _contourFinder)
 : pid(pid),
   oid(index),
   age(0),
   hasHaar(false),
   haarRect(ofRectangle(0,0,0,0)),
   opticalFlowVectorAccumulation(ofPoint(0,0)),
-  centroid(toOf(contourFinder->getCentroid(index))),
   framesWithoutHaar(0),
   customAttributes(NULL),
   depth(0)
 {
+    contourFinder = _contourFinder;
+    centroid = (toOf(contourFinder->getCentroid(index)));
 	update(false);
 }
 

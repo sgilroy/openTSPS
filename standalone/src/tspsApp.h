@@ -24,6 +24,7 @@
         CAMERA_VIDEOGRABBER
     };
 
+
 /*********************************************************
     APP
 *********************************************************/
@@ -59,7 +60,7 @@ class tspsApp : public ofBaseApp, public ofxPersonListener {
         ofxKinect           kinect;
 
         // kinect or live video?
-        bool bKinect;
+        bool bKinect, bKinectConnected;
         int cameraState;
     
 		#else
@@ -71,9 +72,7 @@ class tspsApp : public ofBaseApp, public ofxPersonListener {
     
 		int camWidth, camHeight;
 
-        ofImage             camerImage;
-		ofxCvColorImage		colorImg;
-		ofxCvGrayscaleImage	grayImg;	
+        ofImage             cameraImage;
     	
 	//status bar stuff
 		ofImage statusBar;

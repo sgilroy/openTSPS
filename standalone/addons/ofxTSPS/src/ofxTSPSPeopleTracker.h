@@ -234,12 +234,12 @@ class ofxTSPSPeopleTracker {//: public ofxCvBlobListener {
 		//ofxCvGrayscaleImage	grayImage;
 		//ofxCvGrayscaleImage	grayImageWarped;
 		//ofxCvGrayscaleImage	grayLastImage;		
-		//ofxCvGrayscaleImage grayBg;
-		//ofxCvGrayscaleImage subtractBg;	
-		//ofxCvGrayscaleImage graySmallImage;
-		//ofxCvGrayscaleImage grayBabyImage;		
-		//ofxCvColorImage colorImage;
-		//ofxCvColorImage colorImageWarped;
+		//ofxCvGrayscaleImage   grayBg;
+		//ofxCvGrayscaleImage   subtractBg;	
+		//ofxCvGrayscaleImage   graySmallImage;
+		//ofxCvGrayscaleImage   grayBabyImage;		
+		//ofxCvColorImage       colorImage;
+		//ofxCvColorImage       colorImageWarped;
 		
 		//more specific CV images for processing
 		
