@@ -22,6 +22,68 @@ namespace ofxCv {
 	// is used for small objects where the compiler can optimize the copying if
 	// necessary. the reference is avoided to make inline toCv/toOf use easier.
 	
+    // channels
+	inline int getChannels(int cvImageType) {
+		return CV_MAT_CN(cvImageType);
+	}
+	inline int getChannels(ofImageType imageType) {
+		switch(imageType) {
+			case OF_IMAGE_COLOR_ALPHA: return 4;
+			case OF_IMAGE_COLOR: return 3;
+			case OF_IMAGE_GRAYSCALE: default: return 1;
+		}
+	}
+	inline int getChannels(Mat& mat) {
+		return mat.channels();
+	}
+	template <class T> inline int getChannels(ofPixels_<T>& pixels) {
+		return pixels.getNumChannels();
+	}
+	template <class T> inline int getChannels(ofBaseHasPixels_<T>& img) {
+		return getChannels(img.getPixelsRef());
+	}
+	
+	inline ofImageType getOfImageType(int cvImageType) {
+		switch(getChannels(cvImageType)) {
+			case 4: return OF_IMAGE_COLOR_ALPHA;
+			case 3: return OF_IMAGE_COLOR;
+			case 1: default: return OF_IMAGE_GRAYSCALE;
+		}
+	}
+	template <class T> inline ofImageType getOfImageType(T& img) {
+		switch(getChannels(img)) {
+			case 4: return OF_IMAGE_COLOR_ALPHA;
+			case 3: return OF_IMAGE_COLOR;
+			case 1: default: return OF_IMAGE_GRAYSCALE;
+		}
+	}
+    
+    // depth
+	inline int getDepth(Mat& mat) {
+		return mat.depth();
+	}
+	template <class T> inline int getDepth(ofPixels_<T>& pixels) {
+		switch(pixels.getBytesPerChannel()) {
+			case 4: return CV_32F;
+			case 2: return CV_16U;
+			case 1: default: return CV_8U;
+		}
+	}
+	template <class T> inline int getDepth(ofBaseHasPixels_<T>& img) {
+		return getDepth(img.getPixelsRef());
+	}
+	
+    // image type
+	inline int getCvImageType(int channels, int depth = CV_8U) {
+		return CV_MAKETYPE(depth, channels);
+	}
+	inline int getCvImageType(ofImageType imageType, int depth = CV_8U) {
+		return CV_MAKETYPE(depth, getChannels(imageType));
+	}
+	template <class T> inline int getCvImageType(T& img) {
+		return CV_MAKETYPE(getDepth(img), getChannels(img));
+	}
+    
 	// toCv functions
 	Mat toCv(Mat& mat);
 	template <class T> inline Mat toCv(ofPixels_<T>& pix) {
@@ -66,67 +128,6 @@ namespace ofxCv {
 	template <class T> inline int getHeight(T& src) {return src.getHeight();}
 	inline int getWidth(Mat& src) {return src.cols;}
 	inline int getHeight(Mat& src) {return src.rows;}
-	
-	// depth
-	inline int getDepth(Mat& mat) {
-		return mat.depth();
-	}
-	template <class T> inline int getDepth(ofPixels_<T>& pixels) {
-		switch(pixels.getBytesPerChannel()) {
-			case 4: return CV_32F;
-			case 2: return CV_16U;
-			case 1: default: return CV_8U;
-		}
-	}
-	template <class T> inline int getDepth(ofBaseHasPixels_<T>& img) {
-		return getDepth(img.getPixelsRef());
-	}
-	
-	// channels
-	inline int getChannels(int cvImageType) {
-		return CV_MAT_CN(cvImageType);
-	}
-	inline int getChannels(ofImageType imageType) {
-		switch(imageType) {
-			case OF_IMAGE_COLOR_ALPHA: return 4;
-			case OF_IMAGE_COLOR: return 3;
-			case OF_IMAGE_GRAYSCALE: default: return 1;
-		}
-	}
-	inline int getChannels(Mat& mat) {
-		return mat.channels();
-	}
-	template <class T> inline int getChannels(ofPixels_<T>& pixels) {
-		return pixels.getNumChannels();
-	}
-	template <class T> inline int getChannels(ofBaseHasPixels_<T>& img) {
-		return getChannels(img.getPixelsRef());
-	}
-	
-	// image type
-	inline int getCvImageType(int channels, int depth = CV_8U) {
-		return CV_MAKETYPE(depth, channels);
-	}
-	inline int getCvImageType(ofImageType imageType, int depth = CV_8U) {
-		return CV_MAKETYPE(depth, getChannels(imageType));
-	}
-	template <class T> inline int getCvImageType(T& img) {
-		return CV_MAKETYPE(getDepth(img), getChannels(img));
-	}
-	inline ofImageType getOfImageType(int cvImageType) {
-		switch(getChannels(cvImageType)) {
-			case 4: return OF_IMAGE_COLOR_ALPHA;
-			case 3: return OF_IMAGE_COLOR;
-			case 1: default: return OF_IMAGE_GRAYSCALE;
-		}
-	}
-	template <class T> inline ofImageType getOfImageType(T& img) {
-		switch(getChannels(img)) {
-			case 4: return OF_IMAGE_COLOR_ALPHA;
-			case 3: return OF_IMAGE_COLOR;
-			case 1: default: return OF_IMAGE_GRAYSCALE;
-		}
-	}
 	
 	// allocationg
 	template <class T> inline void allocate(T& img, int width, int height, int cvType) {

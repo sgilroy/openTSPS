@@ -132,6 +132,9 @@ namespace ofxCv {
 	void Tracker<T>::setMaximumDistance(float maximumDistance) {
 		this->maximumDistance = maximumDistance;
 	}
+    
+	float trackingDistance(const cv::Rect& a, const cv::Rect& b);
+	float trackingDistance(const cv::Point2f& a, const cv::Point2f& b);
 	
 	template <class T>
 	vector<unsigned int>& Tracker<T>::track(const vector<T>& objects) {
@@ -264,8 +267,6 @@ namespace ofxCv {
 		return previousLabelMap.count(label) > 0;
 	}
 	
-	float trackingDistance(const cv::Rect& a, const cv::Rect& b);
-	float trackingDistance(const cv::Point2f& a, const cv::Point2f& b);
 	
 	typedef Tracker<cv::Rect> RectTracker;
 	typedef Tracker<cv::Point2f> PointTracker;
