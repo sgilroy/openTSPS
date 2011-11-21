@@ -349,7 +349,7 @@ void ofxTSPSPeopleTracker::trackPeople()
 	//sprintf(pringString, "found %i haar items this frame", (int) haarRects.size());
 	ofLog(OF_LOG_VERBOSE, pringString);
 	
-    contourFinder.findContours( cameraImage) ;//differencedImage );
+    contourFinder.findContours( cameraImage ) ;//differencedImage );
 	//contourFinder.findContours(grayDiff, p_Settings->minBlob*width*height, p_Settings->maxBlob*width*height, 50, p_Settings->bFindHoles);
 	//persistentTracker.trackBlobs(contourFinder.blobs);
 	
@@ -438,8 +438,13 @@ void ofxTSPSPeopleTracker::trackPeople()
             ofPoint centroid = toOf(contourFinder.getCentroid(i));
             blobOn( centroid.x, centroid.y, id, i );
         }
-		
 	}
+    
+    // delete old blobs : THIS ISN'T RIGHT ;(
+    vector<unsigned int> & deadLabels = tracker.getDeadLabels();
+    for (int i=0; i<deadLabels.size(); i++){
+        trackedPeople.erase(deadLabels[i]);
+    }
 	
 	//normalize it
 	scene.percentCovered /= width*height;
