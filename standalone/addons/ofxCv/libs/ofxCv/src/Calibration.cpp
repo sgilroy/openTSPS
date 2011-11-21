@@ -10,6 +10,7 @@ namespace ofxCv {
 		this->cameraMatrix = cameraMatrix;
 		this->imageSize = imageSize;
 		this->sensorSize = sensorSize;
+		
 		calibrationMatrixValues(cameraMatrix, imageSize, sensorSize.width, sensorSize.height,
 														fov.x, fov.y, focalLength, principalPoint, aspectRatio);
 
@@ -55,7 +56,7 @@ namespace ofxCv {
 		float cy = principalPoint.y;
 		glFrustum(
 			nearDist * (-cx) / fx, nearDist * (w - cx) / fx,
-			nearDist * (cy - h) / fy,	nearDist * (cy) / fy,
+			nearDist * (cy - h) / fy, nearDist * (cy) / fy,
 			nearDist, farDist);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -67,8 +68,10 @@ namespace ofxCv {
 	
 	Calibration::Calibration() :
 		patternSize(cv::Size(10, 7)), squareSize(2.5), // based on Chessboard_A4.pdf, assuming world units are centimeters
+		subpixelSize(cv::Size(11,11)),
 		fillFrame(true),
-		_isReady(false)
+		_isReady(false),
+		reprojectionError(0.0)
 	{
 		
 	}
@@ -127,7 +130,6 @@ namespace ofxCv {
 			imagePoints.push_back(featureset); // technique 1
 		}
 		addedImageSize = imageSize;
-		calibrate();		
 	}
 	void Calibration::setPatternSize(int xCount, int yCount) {
 		patternSize = cv::Size(xCount, yCount);
@@ -137,6 +139,10 @@ namespace ofxCv {
 	}
 	void Calibration::setFillFrame(bool fillFrame) {
 		this->fillFrame = fillFrame;
+	}
+	void Calibration::setSubpixelSize(int subpixelSize) {
+		subpixelSize = MAX(subpixelSize,2);
+		this->subpixelSize = cv::Size(subpixelSize,subpixelSize);
 	}
 	bool Calibration::add(Mat img) {
 		addedImageSize = img.size();
@@ -165,15 +171,16 @@ namespace ofxCv {
 				grayMat = img;
 			}
 			
-			// the 11x11 dictates the smallest image space square size allowed
+			// the subpixelSize dictates the smallest image space square size allowed
 			// in other words, if your smallest square is 11x11 pixels, then set this to 11x11
-			cornerSubPix(grayMat, pointBuf, cv::Size(11, 11),  cv::Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1 ));
+			cornerSubPix(grayMat, pointBuf, subpixelSize,  cv::Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1 ));
 			
 			return true;
 		} else {
 			return false;
 		}
 	}
+	
 	bool Calibration::clean(float minReprojectionError) {
 		int removed = 0;
 		for(int i = size() - 1; i >= 0; i--) {

@@ -3,7 +3,7 @@
  *  ofxPerson.h
  *  Rockwell LAB + IDEO LAB peopleVision project
  *
- *  Based on code created by NUI Group Dev Team A on 3/1/09.
+ *  Based in part on code created by NUI Group Dev Team A on 3/1/09.
  *  Copyright 2009 NUI Group/Inc. All rights reserved.       
  *  Version : 1.20
  *
@@ -52,6 +52,7 @@
 
 #include "ofxTSPSPerson.h"
 #include "ofxTSPSView.h"
+//#include "ofxCv.h"
 #include "ofxOpenCv.h"
 #include "CPUImageFilter.h"
 #include "ofxCvOpticalFlowLK.h"
@@ -61,7 +62,6 @@
 
 //dependent libraries
 #include "ofxCvHaarTracker.h"
-#include "ofxContourAnalysis.h"
 #include "ofxTSPSSettings.h"
 #include "ofxTSPSGuiManager.h"
 #include "ofxTSPSTUIOSender.h"
@@ -70,6 +70,7 @@
 #include "ofxTSPSWebSocketSender.h"
 #include "ofxCvBlobTracker.h"
 #include "ofxTSPSScene.h"
+#include "ofxTSPSUtils.h"
 
 #define DRAW_MODE_NORMAL				0
 #define DRAW_MODE_GUI					1
@@ -190,8 +191,7 @@ class ofxTSPSPeopleTracker : public ofxCvBlobListener {
 		bool loadFont(string fontName, int fontSize);
 	
 		//JG this is so we can access video grabber settings through the default interface
-		void setVideoGrabber(ofVideoGrabber* grabber);
-
+		void setVideoGrabber(ofBaseVideo* grabber, tspsInputType inputType);
 
 		// for accessing Optical Flow in specific regions
 		//			  and accessing the threshold set in the GUI
@@ -214,8 +214,9 @@ class ofxTSPSPeopleTracker : public ofxCvBlobListener {
 		bool inBackgroundView();
 		bool inDifferencingView();
 		bool inDataView();
-	
-	
+        
+        // GUI getters
+        bool useKinect();	
 	
 	protected:
 	
@@ -252,7 +253,6 @@ class ofxTSPSPeopleTracker : public ofxCvBlobListener {
 		
 		ofxCvContourFinder 	contourFinder;
 		ofxCvBlobTracker persistentTracker;
-		ofxContourAnalysis contourAnalysis;
 		int drawMode;
 		
 		//filter variables

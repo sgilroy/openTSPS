@@ -13,7 +13,11 @@
 #define snprintf sprintf_s
 #endif
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark Setup
+
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setup(int w, int h)
 {	
 	ofAddListener(ofEvents.mousePressed, this, &ofxTSPSPeopleTracker::mousePressed);
@@ -28,8 +32,7 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	grayBg.allocate(width, height);
 	grayDiff.allocate(width, height);
 	floatBgImg.allocate(width, height);
-	graySmallImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
-	
+	graySmallImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );	
 	grayLastImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
 	grayBabyImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
 	
@@ -90,6 +93,7 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	lastHaarFile = "";
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setHaarXMLFile(string haarFile)
 {
 	haarFile = "haar/" + haarFile;
@@ -103,8 +107,11 @@ void ofxTSPSPeopleTracker::setHaarXMLFile(string haarFile)
 	}
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark Setup Communication
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setupTuio(string ip, int port)
 {
 	ofLog(OF_LOG_VERBOSE, "SEND TUIO");
@@ -114,6 +121,7 @@ void ofxTSPSPeopleTracker::setupTuio(string ip, int port)
 	tuioClient.setup(ip, port);
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setupOsc(string ip, int port)
 {
 	ofLog(OF_LOG_VERBOSE, "SEND OSC");
@@ -123,6 +131,7 @@ void ofxTSPSPeopleTracker::setupOsc(string ip, int port)
 	oscClient.setupSender(ip, port);
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setupTcp(int port)
 {
 	bTcpEnabled = true;
@@ -131,6 +140,7 @@ void ofxTSPSPeopleTracker::setupTcp(int port)
 	tcpClient.setup(port);
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setupWebSocket( int port)
 {
 	ofLog(OF_LOG_VERBOSE, "SEND VIA WEBSOCKETS AT PORT "+port);
@@ -139,12 +149,16 @@ void ofxTSPSPeopleTracker::setupWebSocket( int port)
     webSocketServer.setup(port);
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setListener(ofxPersonListener* listener)
 {
 	eventListener = listener;
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark Track People
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::update(ofxCvColorImage image)
 {
 	grayImage = image;
@@ -154,6 +168,7 @@ void ofxTSPSPeopleTracker::update(ofxCvColorImage image)
 	
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::update(ofxCvGrayscaleImage image)
 {
 	grayImage = image;
@@ -162,6 +177,7 @@ void ofxTSPSPeopleTracker::update(ofxCvGrayscaleImage image)
 	trackPeople();
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::updateSettings()
 {
 	setHaarXMLFile(p_Settings->haarFile);
@@ -179,9 +195,12 @@ void ofxTSPSPeopleTracker::updateSettings()
 	else if (!p_Settings->bSendTcp) bTcpEnabled = false;
         
     //check to enable websockets
-    if (p_Settings->bSendWebSockets && !bWebSocketsEnabled) setupWebSocket(p_Settings->webSocketPort);
-    else if (!p_Settings->bSendWebSockets) bWebSocketsEnabled = false;
-	
+    if (p_Settings->bSendWebSockets && !bWebSocketsEnabled){
+        setupWebSocket(p_Settings->webSocketPort);
+    } else if (!p_Settings->bSendWebSockets){
+        bWebSocketsEnabled = false;
+        webSocketServer.close();
+    }
 	//switch camera view if new panel is selected
 	if (p_Settings->currentPanel != p_Settings->lastCurrentPanel) setActiveView(p_Settings->currentPanel + 1);
 
@@ -199,16 +218,21 @@ void ofxTSPSPeopleTracker::updateSettings()
  * the system to the current location
  * of people
  */
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::trackPeople()
-{
-	
+{	
 	//-------------------
 	//QUAD WARPING
 	//-------------------
 		
 	//warp background
-	grayImageWarped.warpIntoMe(grayImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);
-	colorImageWarped.warpIntoMe(colorImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);	
+    //grayImageWarped = grayImage;
+    colorImage = grayImage;
+    colorImageWarped = colorImage;
+    //getQuadSubImage(&colorImage, &colorImageWarped, &p_Settings->quadWarpScaled, 3);
+    getQuadSubImage(&grayImage, &grayImageWarped, &p_Settings->quadWarpScaled, 1);
+    //grayImageWarped.warpIntoMe(grayImage, p_Settings->quadWarpScaled,     p_Settings->quadWarpOriginal);
+	//colorImageWarped.warpIntoMe(colorImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);	
 	
 	graySmallImage.scaleIntoMe(grayImageWarped);
 	grayBabyImage.scaleIntoMe(grayImageWarped);
@@ -305,14 +329,13 @@ void ofxTSPSPeopleTracker::trackPeople()
 	
 	contourFinder.findContours(grayDiff, p_Settings->minBlob*width*height, p_Settings->maxBlob*width*height, 50, p_Settings->bFindHoles);
 	persistentTracker.trackBlobs(contourFinder.blobs);
-	
-	scene.averageMotion = opticalFlow.flowInRegion(0,0,width,height);
-	scene.percentCovered = 0; 
-	
+		
 	// By setting maxVector and minVector outside the following for-loop, blobs do NOT have to be detected first
 	//            before optical flow can begin working.
 	if(p_Settings->bTrackOpticalFlow) {
-		opticalFlow.maxVector = p_Settings->maxOpticalFlow;
+        scene.averageMotion = opticalFlow.flowInRegion(0,0,width,height);
+        scene.percentCovered = 0; 
+        opticalFlow.maxVector = p_Settings->maxOpticalFlow;
 		opticalFlow.minVector = p_Settings->minOpticalFlow;
 	}
 	
@@ -330,13 +353,6 @@ void ofxTSPSPeopleTracker::trackPeople()
 		//update this person with new blob info
 		p->update(blob, p_Settings->bCentroidDampen);
 
-		//simplify blob for communication
-		contourAnalysis.simplify(p->contour, p->simpleContour, 2.0f);
-		float simplifyAmount = 2.5f;
-		/*while (p->simpleContour.size() > 100){
-			contourAnalysis.simplify(p->contour, p->simpleContour, simplifyAmount);
-			simplifyAmount += .5f;
-		}*/
 		//normalize simple contour
 		for (int i=0; i<p->simpleContour.size(); i++){
 			p->simpleContour[i].x /= width;
@@ -478,12 +494,19 @@ void ofxTSPSPeopleTracker::trackPeople()
 	}
     
     if (bWebSocketsEnabled){
+        if (p_Settings->webSocketPort != webSocketServer.getPort()){
+            webSocketServer.close();
+            webSocketServer.setup( p_Settings->webSocketPort );
+        }
         //sent automagically
         webSocketServer.send();
     }
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark Person Management
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int order )
 {
 	ofxCvTrackedBlob blob = persistentTracker.getById( id );
@@ -510,8 +533,10 @@ void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int order )
 	
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::blobMoved( int x, int y, int id, int order ){/*not used*/}
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::blobOff( int x, int y, int id, int order )
 {
 	ofxTSPSPerson* p = getTrackedPerson(id);
@@ -555,6 +580,7 @@ void ofxTSPSPeopleTracker::blobOff( int x, int y, int id, int order )
 	}
 }
 
+//---------------------------------------------------------------------------
 ofxTSPSPerson* ofxTSPSPeopleTracker::getTrackedPerson( int pid )
 {
     for( int i = 0; i < trackedPeople.size(); i++ ) {
@@ -565,19 +591,26 @@ ofxTSPSPerson* ofxTSPSPeopleTracker::getTrackedPerson( int pid )
 	return NULL;
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark Draw
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::draw()
 {
 	draw(0,0);
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::draw(int x, int y)
 {
 	draw(x,y,drawMode);
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::draw(int x, int y, int mode)
 {
+    // run lean + mean if we're minimized
+    if (p_Settings->bMinimized) return;
 	ofPushMatrix();
 		ofTranslate(x, y, 0);
 		// draw the incoming, the grayscale, the bg and the thresholded difference
@@ -630,6 +663,7 @@ void ofxTSPSPeopleTracker::draw(int x, int y, int mode)
 	else font.drawString(frmrate, (int)cameraView.x + 10, (int) (cameraView.y + 10 + cameraView.height + spacing*5));
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::drawBlobs( float drawWidth, float drawHeight){
 	
 	float scaleVar = (float) drawWidth/width;
@@ -738,9 +772,12 @@ void ofxTSPSPeopleTracker::drawBlobs( float drawWidth, float drawHeight){
 	ofSetHexColor(0xffffff);				
 	//ofDrawBitmapString("blobs and optical flow", 5, height - 5 );
 }
-	
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark mouse
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::mousePressed( ofMouseEventArgs &e )
 {
 	if (isInsideRect(e.x, e.y, cameraView)){
@@ -781,42 +818,53 @@ void ofxTSPSPeopleTracker::mousePressed( ofMouseEventArgs &e )
 	}
 }
 
+//---------------------------------------------------------------------------
 bool ofxTSPSPeopleTracker::isInsideRect(float x, float y, ofRectangle rect){
     return ( x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height );
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark gui extension
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::addSlider(string name, int* value, int min, int max)
 {
 	//forward to the gui manager
 	gui.addSlider(name, value, min, max);
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::addSlider(string name, float* value, float min, float max)
 {
 	gui.addSlider(name, value, min, max);	
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::addToggle(string name, bool* value)
 {
 	gui.addToggle(name, value);	
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark accessors
 
 /**
  * simple public getter for external classes
  */
+//---------------------------------------------------------------------------
 ofxTSPSPerson* ofxTSPSPeopleTracker::personAtIndex(int i)
 {
 	return trackedPeople[i];
 }
 
+//---------------------------------------------------------------------------
 int ofxTSPSPeopleTracker::totalPeople()
 {
 	return trackedPeople.size();
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::enableHaarFeatures(bool doHaar)
 {
 	p_Settings->bDetectHaar = doHaar;
@@ -827,17 +875,28 @@ void ofxTSPSPeopleTracker::enableOpticalFlow(bool doOpticalFlow)
 	p_Settings->bTrackOpticalFlow = doOpticalFlow;
 }
 
+//---------------------------------------------------------------------------
 // for accessing the OSC sender whose parameters are adjusted in the GUI
 ofxTSPSOscSender* ofxTSPSPeopleTracker::getOSCsender() {
 	return &oscClient;
 }
 
+//---------------------------------------------------------------------------
 ofxTSPSWebSocketSender * ofxTSPSPeopleTracker::getWebSocketServer(){
     return &webSocketServer;
 };
 
 
+//---------------------------------------------------------------------------
+bool ofxTSPSPeopleTracker::useKinect(){
+    return p_Settings->bUseKinect;
+};	
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark background management
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::relearnBackground()
 {
 	p_Settings->bLearnBackground = true;
@@ -849,70 +908,87 @@ void ofxTSPSPeopleTracker::relearnBackground()
 //	p_Settings->bSmartLearnBackground = doSmartLearn;
 //}
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::enableBackgroundReleaernProgressive(bool doProgressive) //relearns over time using progessive frame averagering
 {
 	p_Settings->bLearnBackgroundProgressive = doProgressive;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setRelearnRate(float relearnRate)
 {
 	p_Settings->fLearnRate = relearnRate;
 }
 
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark image control
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setThreshold(float thresholdAmount)
 {
 	p_Settings->threshold = thresholdAmount;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setMinBlobSize(float minBlobSize)
 {
 	p_Settings->minBlob = minBlobSize; 
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setMaxBlobSize(float maxBlobSize)
 {
 	p_Settings->maxBlob = maxBlobSize;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::enableSmooth(bool doSmooth)
 {
 	p_Settings->bSmooth = doSmooth;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setSmoothAmount(int smoothAmount)
 {
 	p_Settings->smooth = smoothAmount;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::enableHighpass(bool doHighpass)
 {
 	p_Settings->bHighpass = doHighpass;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setHighpassBlurAmount(int highpassBlurAmount)
 {
 	p_Settings->highpassBlur = highpassBlurAmount;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setHighpassNoiseAmount(int highpassNoiseAmount)
 {
 	p_Settings->highpassNoise = highpassNoiseAmount;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::enableAmplify(bool doAmp)
 {
 	p_Settings->bAmplify = doAmp;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setAmplifyAmount(int amplifyAmount)
 {
 	p_Settings->highpassAmp = amplifyAmount;
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark filter controls
 //haar
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setHaarExpandArea(float haarExpandAmount) //makes the haar rect +area bigger
 {
 	p_Settings->haarAreaPadding = haarExpandAmount;
@@ -934,33 +1010,41 @@ void ofxTSPSPeopleTracker::setHaarExpandArea(float haarExpandAmount) //makes the
 //}
 
 //blobs
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::enableFindHoles(bool findHoles)
 {
 	p_Settings->bFindHoles = findHoles;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::trackDarkBlobs()
 {
 	p_Settings->trackType = TRACK_DARK;
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::trackLightBlobs()
 {
 	p_Settings->trackType = TRACK_LIGHT;	
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setDrawMode(int mode)
 {
 	drawMode = mode;
 }
 
+//---------------------------------------------------------------------------
 int ofxTSPSPeopleTracker::getDrawMode() 
 {
 	return drawMode;
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #pragma mark gui customization
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setActiveView( int viewIndex ){
 	int oldActiveView = activeViewIndex;
 	activeViewIndex = viewIndex;
@@ -999,12 +1083,14 @@ void ofxTSPSPeopleTracker::setActiveView( int viewIndex ){
 	}
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::setActiveDimensions ( int actWidth, int actHeight){
 	activeWidth = actWidth;
 	activeHeight = actHeight;
 	updateViewRectangles();
 }
 
+//---------------------------------------------------------------------------
 bool ofxTSPSPeopleTracker::loadFont( string fontName, int fontSize){
 	bFontLoaded = font.loadFont(fontName, fontSize);
     if (bFontLoaded){
@@ -1017,11 +1103,20 @@ bool ofxTSPSPeopleTracker::loadFont( string fontName, int fontSize){
     return bFontLoaded;
 }
 
-void ofxTSPSPeopleTracker::setVideoGrabber(ofVideoGrabber* grabber)
+//---------------------------------------------------------------------------
+void ofxTSPSPeopleTracker::setVideoGrabber(ofBaseVideo* grabber, tspsInputType inputType)
 {
-	p_Settings->videoGrabber = grabber;
+	p_Settings->setVideoGrabber( grabber, inputType );
+    if (inputType == TSPS_INPUT_VIDEO){
+        gui.enableElement( "open video settings" );
+        gui.disableElement( "use kinect" );
+    } else if (inputType == TSPS_INPUT_KINECT){
+        gui.disableElement( "open video settings" );
+        gui.enableElement( "use kinect" );
+    }
 }
 
+//---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::updateViewRectangles(){
 	//build all rectangles for drawing views
 	ofPoint smallView;
@@ -1061,29 +1156,35 @@ void ofxTSPSPeopleTracker::updateViewRectangles(){
 }
 
 
+//---------------------------------------------------------------------------
 // for accessing Optical Flow within a specific region
 ofPoint ofxTSPSPeopleTracker::getOpticalFlowInRegion(float x, float y, float w, float h) {
 	return opticalFlow.flowInRegion(x,y,w,h);
 }
 
 
+//---------------------------------------------------------------------------
 // for accessing which view is the current view
 bool ofxTSPSPeopleTracker::inCameraView() {
 	return cameraView.isActive();
 }
 
+//---------------------------------------------------------------------------
 bool ofxTSPSPeopleTracker::inBackgroundView() {
 	return bgView.isActive();
 }
 
+//---------------------------------------------------------------------------
 bool ofxTSPSPeopleTracker::inDifferencingView() {
 	return processedView.isActive();
 }
 
+//---------------------------------------------------------------------------
 bool ofxTSPSPeopleTracker::inDataView() {
 	return dataView.isActive();
 }
 
+//---------------------------------------------------------------------------
 bool ofxTSPSPeopleTracker::inAdjustedView() {
 	return adjustedView.isActive();
 }

@@ -36,8 +36,7 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
 	grayBg.allocate(width, height);
 	grayDiff.allocate(width, height);
 	floatBgImg.allocate(width, height);
-	graySmallImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
-	
+	graySmallImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );	
 	grayLastImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
 	grayBabyImage.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
 	*/
@@ -243,18 +242,13 @@ void ofxTSPSPeopleTracker::updateSettings()
  */
 //---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::trackPeople()
-{
-	
+{	
 	//-------------------
 	//QUAD WARPING
 	//-------------------
 		
 	//warp background
-	// TO:DO
-    warpedImage = cameraImage;
-    
-    //grayImageWarped.warpIntoMe(grayImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);
-	//colorImageWarped.warpIntoMe(colorImage, p_Settings->quadWarpScaled, p_Settings->quadWarpOriginal);	
+    getQuadSubImage(&cameraImage, &warpedImage, &p_Settings->quadWarpScaled, OF_IMAGE_COLOR);
 	
 	//graySmallImage.scaleIntoMe(grayImageWarped);
 	//grayBabyImage.scaleIntoMe(grayImageWarped);
@@ -389,14 +383,7 @@ void ofxTSPSPeopleTracker::trackPeople()
             //update this person with new blob info
             p->update(p_Settings->bCentroidDampen);
 
-            //simplify blob for communication
-            // TO:DO JUST WITH OFPOLYLINE??
-            //contourAnalysis.simplify(p->contour, p->simpleContour, 2.0f);
-            float simplifyAmount = 2.5f;
-            while (p->simpleContour.size() > 100){
-                //contourAnalysis.simplify(p->contour, p->simpleContour, simplifyAmount);
-                simplifyAmount += .5f;
-            }
+            
             //normalize simple contour
             for (int i=0; i<p->simpleContour.size(); i++){
                 p->simpleContour[i].x /= width;
@@ -450,7 +437,6 @@ void ofxTSPSPeopleTracker::trackPeople()
         } else {
             ofPoint centroid = toOf(contourFinder.getCentroid(i));
             blobOn( centroid.x, centroid.y, id, i );
-
         }
 		
 	}
@@ -506,27 +492,31 @@ void ofxTSPSPeopleTracker::trackPeople()
                 webSocketServer.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
             }
         }
-        
-        if(bTuioEnabled){
-            tuioClient.update();		
+    }
+    
+	if(bTuioEnabled){
+		tuioClient.update();		
+	}
+	
+	if (bOscEnabled){
+		oscClient.ip = p_Settings->oscHost;
+		oscClient.port = p_Settings->oscPort;
+		oscClient.update();
+	};
+    
+	if (bTcpEnabled){
+		tcpClient.port = p_Settings->oscPort;
+		tcpClient.update();
+		tcpClient.send();
+	}
+    
+    if (bWebSocketsEnabled){
+        if (p_Settings->webSocketPort != webSocketServer.getPort()){
+            webSocketServer.close();
+            webSocketServer.setup( p_Settings->webSocketPort );
         }
-        
-        if (bOscEnabled){
-            oscClient.ip = p_Settings->oscHost;
-            oscClient.port = p_Settings->oscPort;
-            oscClient.update();
-        };
-        
-        if (bTcpEnabled){
-            tcpClient.port = p_Settings->oscPort;
-            tcpClient.update();
-            tcpClient.send();
-        }
-        
-        if (bWebSocketsEnabled){
-            //sent automagically
-            webSocketServer.send();
-        }
+        //sent automagically
+        webSocketServer.send();
     }
 }
 
@@ -631,6 +621,8 @@ void ofxTSPSPeopleTracker::draw(int x, int y)
 //---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::draw(int x, int y, int mode)
 {
+    // run lean + mean if we're minimized
+    if (p_Settings->bMinimized) return;
 	ofPushMatrix();
 		ofTranslate(x, y, 0);
 		// draw the incoming, the grayscale, the bg and the thresholded difference
@@ -704,7 +696,6 @@ void ofxTSPSPeopleTracker::drawBlobs( float drawWidth, float drawHeight){
 	ofScale(scaleVar, scaleVar);
 	
 	// simpler way to draw contours: contourFinder.draw();
-	cout<<"peeps "<<trackedPeople.size()<<endl;
     if (trackedPeople.size() > 0){
         map<unsigned int,ofxTSPSPerson*>::iterator it;    
         for (it=trackedPeople.begin(); it != trackedPeople.end(); ++it){		
@@ -1128,9 +1119,16 @@ bool ofxTSPSPeopleTracker::loadFont( string fontName, int fontSize){
 }
 
 //---------------------------------------------------------------------------
-void ofxTSPSPeopleTracker::setVideoGrabber(ofVideoGrabber* grabber)
+void ofxTSPSPeopleTracker::setVideoGrabber(ofBaseVideo* grabber, tspsInputType inputType)
 {
-	p_Settings->videoGrabber = grabber;
+	p_Settings->setVideoGrabber( grabber, inputType );
+    if (inputType == TSPS_INPUT_VIDEO){
+        gui.enableElement( "open video settings" );
+        gui.disableElement( "use kinect" );
+    } else if (inputType == TSPS_INPUT_KINECT){
+        gui.disableElement( "open video settings" );
+        gui.enableElement( "use kinect" );
+    }
 }
 
 //---------------------------------------------------------------------------

@@ -56,6 +56,15 @@ void ofxTSPSPerson::update(bool dampen)
     contour		 = contourFinder->getPolyline(oid);//blob.pts; 
 	area		 = contourFinder->getContourArea(oid);//blob.area;
 	boundingRect = toOf(contourFinder->getBoundingRect(oid));//blob.boundingRect;
+    
+    simpleContour = contour;
+    simpleContour.simplify(2.0f);
+    float simplifyAmount = 2.5f;
+    while (simpleContour.size() > 100){
+        simpleContour.simplify(simplifyAmount);
+        simplifyAmount += .5f;
+    }
+    
 	age++;
 }
 
@@ -148,16 +157,17 @@ string ofxTSPSPerson::getJSON( string type, ofPoint centroid, int cameraWidth, i
 	
 	message<<"\"opticalflow\":{"<<"\"x\":"<<opticalFlowVectorAccumulation.x<<",\"y\":"<<opticalFlowVectorAccumulation.y<<"},";
 	ofRectangle scaledHaar = getHaarRectNormalized(cameraWidth,cameraHeight);
-	message<<"\"haarrect\":{"<<"\"x\":"<<scaledHaar.x<<",\"y\":"<<scaledHaar.y<<",\"width\":"<<scaledHaar.width<<",\"height\":"<<scaledHaar.height<<"},";	
+	message<<"\"haarrect\":{"<<"\"x\":"<<scaledHaar.x<<",\"y\":"<<scaledHaar.y<<",\"width\":"<<scaledHaar.width<<",\"height\":"<<scaledHaar.height<<"}";	
 	
 	if (bSendContours){
+        message<<",";
 		message<<"\"contours\":[";
 		for (int i=0; i<simpleContour.size(); i++){
 			message<<"{\"x\":"<<ofToString(simpleContour[i].x, 3)<<",\"y\":"<<ofToString(simpleContour[i].y, 3)<<"}";
 			if (i+1 < simpleContour.size()) message<<",";
 		};
 		message<<"]";
-	}	
+	}
 	message<<"}";
 	return message.str();
 }
