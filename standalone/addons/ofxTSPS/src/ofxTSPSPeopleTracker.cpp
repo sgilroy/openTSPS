@@ -50,8 +50,7 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
     contourFinder.setMinAreaRadius(1);
 	contourFinder.setMaxAreaRadius(100);
 	contourFinder.setThreshold(15);
-	contourFinder.getTracker().setMaximumAge(4);
-	//contourFinder.getTracker().setMaximumAge(32);
+	contourFinder.getTracker().setMaximumAge(30);
     
     //setup background
 	backgroundDifferencer.setLearningTime(900);
@@ -286,6 +285,7 @@ void ofxTSPSPeopleTracker::trackPeople()
 	
     // set threshold
     backgroundDifferencer.setThresholdValue( p_Settings->threshold );
+	contourFinder.setThreshold(p_Settings->threshold);
     
 	if(p_Settings->trackType == TRACK_ABSOLUTE){
         backgroundDifferencer.setDifferenceMode( RunningBackground::ABSOLUTE );
@@ -367,16 +367,15 @@ void ofxTSPSPeopleTracker::trackPeople()
     RectTracker& tracker = contourFinder.getTracker();
     
     for(int i = 0; i < contourFinder.size(); i++){
-        int id = contourFinder.getLabel(i);
+        unsigned int id = contourFinder.getLabel(i);
         if(tracker.existsPrevious(id)) {
-        //for(int i = 0; i < persistentTracker.blobs.size(); i++){
-            //ofxCvTrackedBlob blob = persistentTracker.blobs[i];
             ofxTSPSPerson* p = trackedPeople[id];
             //somehow we are not tracking this person, safeguard (shouldn't happen)
             if(NULL == p){
                 ofLog(OF_LOG_WARNING, "ofxPerson::warning. encountered persistent blob without a person behind them\n");
                 continue;
             }
+            p->oid = i; //hack ;(
             
             scene.percentCovered += p->area;
             
@@ -440,10 +439,23 @@ void ofxTSPSPeopleTracker::trackPeople()
         }
 	}
     
-    // delete old blobs : THIS ISN'T RIGHT ;(
-    vector<unsigned int> & deadLabels = tracker.getDeadLabels();
-    for (int i=0; i<deadLabels.size(); i++){
-        trackedPeople.erase(deadLabels[i]);
+    // delete old blobs
+    
+    map<unsigned int,ofxTSPSPerson*>::iterator it;    
+    it = trackedPeople.begin();
+    while(it != trackedPeople.end()){
+        ofxTSPSPerson* p = (*it).second;
+        if (p == NULL){
+            // wtfz
+            ++it;
+            continue;
+        }
+        if (p->age > 60){
+            cout<<"erase "<<it->first<<endl;
+            trackedPeople.erase(it++);
+        } else {
+            ++it;
+        }
     }
 	
 	//normalize it
@@ -531,8 +543,9 @@ void ofxTSPSPeopleTracker::trackPeople()
 //---------------------------------------------------------------------------
 void ofxTSPSPeopleTracker::blobOn( int x, int y, int id, int index ){
 	//ofxCvTrackedBlob blob = persistentTracker.getById( id );
-	ofxTSPSPerson* newPerson = new ofxTSPSPerson(id, index, &contourFinder);//order, blob);
+	ofxTSPSPerson* newPerson = new ofxTSPSPerson(id, index, contourFinder);//order, blob);
 	trackedPeople[id] = newPerson;
+    cout<<"sweet! "<<id<<":"<<trackedPeople[id]<<endl;
     //trackedPeople.push_back( newPerson );
 	if(eventListener != NULL){
 		eventListener->personEntered(newPerson, &scene);

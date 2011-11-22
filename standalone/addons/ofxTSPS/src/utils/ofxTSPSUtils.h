@@ -6,7 +6,8 @@
 //  Copyright 2011 Rockwell Group. All rights reserved.
 //
 
-#include "ofxOpenCv.h"
+#include "ofMain.h"
+//#include "ofxOpenCv.h"
 
 // useful! from http://forum.openframeworks.cc/index.php/topic,6398.0.html
 static void getQuadSubImage(ofImage * inputImage, ofImage * outputImage, vector <ofPoint> * quad, ofImageType imageType) {

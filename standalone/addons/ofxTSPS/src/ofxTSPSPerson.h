@@ -54,7 +54,7 @@
 class ofxTSPSPerson
 {
 	public: 
-        ofxTSPSPerson(int pid, int index, ofxCv::ContourFinder * contourFinder);    
+        ofxTSPSPerson(int pid, int index, ofxCv::ContourFinder& _contourFinder);    
         //ofxTSPSPerson(int pid, int oid, ofxCvBlob blob);
 		~ofxTSPSPerson();
         
@@ -97,7 +97,7 @@ class ofxTSPSPerson
         string getString( ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours );
     
 	protected:
-        ofxCv::ContourFinder * contourFinder;
+        ofxCv::ContourFinder& contourFinder;
     
 		bool hasHaar;
 		ofRectangle haarRect;

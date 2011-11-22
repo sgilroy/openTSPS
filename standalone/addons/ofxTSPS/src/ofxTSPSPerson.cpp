@@ -13,8 +13,9 @@ using namespace cv;
 
 #define MAX_HAAR_GHOSTFRAMES 15 //how long before we say it's really gone
 
-ofxTSPSPerson::ofxTSPSPerson(int id, int index, ofxCv::ContourFinder * _contourFinder)
-: pid(pid),
+ofxTSPSPerson::ofxTSPSPerson(int id, int index, ofxCv::ContourFinder& _contourFinder)
+: contourFinder(_contourFinder), 
+  pid(id),
   oid(index),
   age(0),
   hasHaar(false),
@@ -24,8 +25,7 @@ ofxTSPSPerson::ofxTSPSPerson(int id, int index, ofxCv::ContourFinder * _contourF
   customAttributes(NULL),
   depth(0)
 {
-    contourFinder = _contourFinder;
-    centroid = (toOf(contourFinder->getCentroid(index)));
+    centroid = (toOf(contourFinder.getCentroid(index)));
 	update(false);
 }
 
@@ -42,7 +42,8 @@ void ofxTSPSPerson::updateIndex( int index ){
 
 void ofxTSPSPerson::update(bool dampen)
 {
-    ofPoint c = toOf(contourFinder->getCentroid(oid));
+    //oid = contourFinder.getTracker().getIndexFromLabel(pid);
+    ofPoint c = toOf(contourFinder.getCentroid(oid));
     
 	if(dampen){
 		centroid = (centroid * .7) + ( c * .3);
@@ -53,9 +54,9 @@ void ofxTSPSPerson::update(bool dampen)
 	}
 	
     velocity	 = c - centroid;
-    contour		 = contourFinder->getPolyline(oid);//blob.pts; 
-	area		 = contourFinder->getContourArea(oid);//blob.area;
-	boundingRect = toOf(contourFinder->getBoundingRect(oid));//blob.boundingRect;
+    contour		 = toOf(contourFinder.getConvexHull(oid));
+	area		 = contourFinder.getContourArea(oid);//blob.area;
+	boundingRect = toOf(contourFinder.getBoundingRect(oid));//blob.boundingRect;
     
     simpleContour = contour;
     simpleContour.simplify(2.0f);
