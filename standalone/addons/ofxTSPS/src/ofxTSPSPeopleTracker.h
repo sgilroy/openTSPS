@@ -228,7 +228,7 @@ class ofxTSPSPeopleTracker {//: public ofxCvBlobListener {
 		ofxTSPSScene scene;
         
         ofImage cameraImage, warpedImage, backgroundImage, differencedImage;
-        ofxCv::RunningBackground backgroundDifferencer;
+        //ofxCv::RunningBackground backgroundDifferencer;
     
 		//ofxCvGrayscaleImage	grayImage;
 		//ofxCvGrayscaleImage	grayImageWarped;

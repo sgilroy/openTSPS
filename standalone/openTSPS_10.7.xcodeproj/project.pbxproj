@@ -101,8 +101,6 @@
 		E765FF88148429C6003CD346 /* oscpack.lib in Frameworks */ = {isa = PBXBuildFile; fileRef = E765FF7C148429C6003CD346 /* oscpack.lib */; };
 		E765FF89148429C6003CD346 /* oscpackd.lib in Frameworks */ = {isa = PBXBuildFile; fileRef = E765FF7D148429C6003CD346 /* oscpackd.lib */; };
 		E765FF8A148429C6003CD346 /* TuioTcpXmlServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E765FF7E148429C6003CD346 /* TuioTcpXmlServer.cpp */; };
-		E765FF9414842A13003CD346 /* ofxCvHaarTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E765FF8E14842A13003CD346 /* ofxCvHaarTracker.cpp */; };
-		E765FF9514842A13003CD346 /* ofxCvHaarTrackerItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E765FF9014842A13003CD346 /* ofxCvHaarTrackerItem.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -464,7 +462,6 @@
 		E765FF421484297E003CD346 /* simpleLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = simpleLogger.h; sourceTree = "<group>"; };
 		E765FF4A148429A6003CD346 /* ofxLABCvHaarFinder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxLABCvHaarFinder.cpp; sourceTree = "<group>"; };
 		E765FF4B148429A6003CD346 /* ofxLABCvHaarFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLABCvHaarFinder.h; sourceTree = "<group>"; };
-		E765FF54148429C6003CD346 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		E765FF55148429C6003CD346 /* TuioClient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TuioClient.cpp; sourceTree = "<group>"; };
 		E765FF56148429C6003CD346 /* TuioClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TuioClient.h; sourceTree = "<group>"; };
 		E765FF57148429C6003CD346 /* TuioContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TuioContainer.h; sourceTree = "<group>"; };
@@ -500,10 +497,6 @@
 		E765FF7D148429C6003CD346 /* oscpackd.lib */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = oscpackd.lib; sourceTree = "<group>"; };
 		E765FF7E148429C6003CD346 /* TuioTcpXmlServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TuioTcpXmlServer.cpp; sourceTree = "<group>"; };
 		E765FF7F148429C6003CD346 /* TuioTcpXmlServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TuioTcpXmlServer.h; sourceTree = "<group>"; };
-		E765FF8E14842A13003CD346 /* ofxCvHaarTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxCvHaarTracker.cpp; sourceTree = "<group>"; };
-		E765FF8F14842A13003CD346 /* ofxCvHaarTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxCvHaarTracker.h; sourceTree = "<group>"; };
-		E765FF9014842A13003CD346 /* ofxCvHaarTrackerItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxCvHaarTrackerItem.cpp; sourceTree = "<group>"; };
-		E765FF9114842A13003CD346 /* ofxCvHaarTrackerItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxCvHaarTrackerItem.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1148,11 +1141,52 @@
 			path = src;
 			sourceTree = "<group>";
 		};
+		A9C4E4CD148A947300F5E8B5 /* communication */ = {
+			isa = PBXGroup;
+			children = (
+				E765FF51148429C6003CD346 /* ofxTuioWrapper */,
+				A94EB0E41437A68B00B6437B /* ofxWebUI_LAB */,
+			);
+			name = communication;
+			sourceTree = "<group>";
+		};
+		A9C4E4CE148A947D00F5E8B5 /* camera */ = {
+			isa = PBXGroup;
+			children = (
+				2EE789AF1430F83700CFEE9D /* ofxKinect */,
+			);
+			name = camera;
+			sourceTree = "<group>";
+		};
+		A9C4E4CF148A948400F5E8B5 /* cv */ = {
+			isa = PBXGroup;
+			children = (
+				A9C01BFE1479D09F00DDDEB7 /* ofxCv */,
+				E765FF44148429A6003CD346 /* ofxCvHaarTracker */,
+				E741C127142F6FBF0040D77D /* ofxOpenCVExtensions */,
+			);
+			name = cv;
+			sourceTree = "<group>";
+		};
+		A9C4E4D0148A94CE00F5E8B5 /* gui */ = {
+			isa = PBXGroup;
+			children = (
+				E765FF281484297E003CD346 /* ofxLabGui */,
+				2E6785D11430B7E30083AE30 /* ofxFileDialog */,
+				E741C11B142F6FBF0040D77D /* ofxMSAInteractiveObject */,
+			);
+			name = gui;
+			sourceTree = "<group>";
+		};
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
 				E741C198142F6FC30040D77D /* built in */,
-				E741C0E7142F6F560040D77D /* third party */,
+				A9C4E4CF148A948400F5E8B5 /* cv */,
+				A9C4E4CE148A947D00F5E8B5 /* camera */,
+				A9C4E4CD148A947300F5E8B5 /* communication */,
+				A9C4E4D0148A94CE00F5E8B5 /* gui */,
+				E741C0E7142F6F560040D77D /* tsps */,
 			);
 			name = addons;
 			sourceTree = "<group>";
@@ -1234,24 +1268,12 @@
 			name = openFrameworks;
 			sourceTree = "<group>";
 		};
-		E741C0E7142F6F560040D77D /* third party */ = {
+		E741C0E7142F6F560040D77D /* tsps */ = {
 			isa = PBXGroup;
 			children = (
-<<<<<<< HEAD:standalone/openTSPS_10.7.xcodeproj/project.pbxproj
-				A9C01BFE1479D09F00DDDEB7 /* ofxCv */,
-=======
-				E765FF51148429C6003CD346 /* ofxTuioWrapper */,
-				E765FF44148429A6003CD346 /* ofxCvHaarTracker */,
-				E765FF281484297E003CD346 /* ofxLabGui */,
->>>>>>> 897292b3d47b6d52a00c4603411ad4fd6051968f:standalone/openTSPS.xcodeproj/project.pbxproj
-				2E6785D11430B7E30083AE30 /* ofxFileDialog */,
-				2EE789AF1430F83700CFEE9D /* ofxKinect */,
-				E741C11B142F6FBF0040D77D /* ofxMSAInteractiveObject */,
-				E741C127142F6FBF0040D77D /* ofxOpenCVExtensions */,
 				E741C135142F6FBF0040D77D /* ofxTSPS */,
-				A94EB0E41437A68B00B6437B /* ofxWebUI_LAB */,
 			);
-			name = "third party";
+			name = tsps;
 			sourceTree = "<group>";
 		};
 		E741C11B142F6FBF0040D77D /* ofxMSAInteractiveObject */ = {
@@ -1331,7 +1353,6 @@
 		E741C198142F6FC30040D77D /* built in */ = {
 			isa = PBXGroup;
 			children = (
-				E741C296142F72C10040D77D /* ofxCvHaarTracker */,
 				E741C1E7142F70780040D77D /* ofxOpenCv */,
 				E741C1CF142F6FFD0040D77D /* ofxNetwork */,
 				E741C1A8142F6FF70040D77D /* ofxOsc */,
@@ -1749,15 +1770,6 @@
 			path = src;
 			sourceTree = "<group>";
 		};
-		E741C296142F72C10040D77D /* ofxCvHaarTracker */ = {
-			isa = PBXGroup;
-			children = (
-				E765FF8D14842A13003CD346 /* src */,
-			);
-			name = ofxCvHaarTracker;
-			path = addons/ofxCvHaarTracker;
-			sourceTree = "<group>";
-		};
 		E765FF281484297E003CD346 /* ofxLabGui */ = {
 			isa = PBXGroup;
 			children = (
@@ -1851,7 +1863,6 @@
 		E765FF53148429C6003CD346 /* core */ = {
 			isa = PBXGroup;
 			children = (
-				E765FF54148429C6003CD346 /* Doxyfile */,
 				E765FF55148429C6003CD346 /* TuioClient.cpp */,
 				E765FF56148429C6003CD346 /* TuioClient.h */,
 				E765FF57148429C6003CD346 /* TuioContainer.h */,
@@ -1946,17 +1957,6 @@
 				E765FF7D148429C6003CD346 /* oscpackd.lib */,
 			);
 			path = win32;
-			sourceTree = "<group>";
-		};
-		E765FF8D14842A13003CD346 /* src */ = {
-			isa = PBXGroup;
-			children = (
-				E765FF8E14842A13003CD346 /* ofxCvHaarTracker.cpp */,
-				E765FF8F14842A13003CD346 /* ofxCvHaarTracker.h */,
-				E765FF9014842A13003CD346 /* ofxCvHaarTrackerItem.cpp */,
-				E765FF9114842A13003CD346 /* ofxCvHaarTrackerItem.h */,
-			);
-			path = src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -2094,8 +2094,6 @@
 				2E592936144F2BAA00E795EA /* usb_libusb10.c in Sources */,
 				2E592938144F2BAA00E795EA /* ofxKinect.cpp in Sources */,
 				2EE5A0C3146DD99E00D4B8AE /* ofxTSPSUtils.cpp in Sources */,
-<<<<<<< HEAD:standalone/openTSPS_10.7.xcodeproj/project.pbxproj
-				2E523C761477082B00797B83 /* ofxLabGui.cpp in Sources */,
 				A9C01C171479D09F00DDDEB7 /* Calibration.cpp in Sources */,
 				A9C01C181479D09F00DDDEB7 /* ContourFinder.cpp in Sources */,
 				A9C01C191479D09F00DDDEB7 /* Distance.cpp in Sources */,
@@ -2104,7 +2102,6 @@
 				A9C01C1C1479D09F00DDDEB7 /* Tracker.cpp in Sources */,
 				A9C01C1D1479D09F00DDDEB7 /* Utilities.cpp in Sources */,
 				A9C01C1E1479D09F00DDDEB7 /* Wrappers.cpp in Sources */,
-=======
 				E765FF431484297E003CD346 /* ofxLabGui.cpp in Sources */,
 				E765FF4E148429A6003CD346 /* ofxLABCvHaarFinder.cpp in Sources */,
 				E765FF80148429C6003CD346 /* TuioClient.cpp in Sources */,
@@ -2113,9 +2110,6 @@
 				E765FF83148429C6003CD346 /* ofxTuioClient.cpp in Sources */,
 				E765FF84148429C6003CD346 /* ofxTuioServer.cpp in Sources */,
 				E765FF8A148429C6003CD346 /* TuioTcpXmlServer.cpp in Sources */,
-				E765FF9414842A13003CD346 /* ofxCvHaarTracker.cpp in Sources */,
-				E765FF9514842A13003CD346 /* ofxCvHaarTrackerItem.cpp in Sources */,
->>>>>>> 897292b3d47b6d52a00c4603411ad4fd6051968f:standalone/openTSPS.xcodeproj/project.pbxproj
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

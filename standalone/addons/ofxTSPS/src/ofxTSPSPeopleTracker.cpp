@@ -47,14 +47,12 @@ void ofxTSPSPeopleTracker::setup(int w, int h)
     differencedImage.allocate(width, height, OF_IMAGE_COLOR);
     
     //setup contour finder
-    contourFinder.setMinAreaRadius(1);
-	contourFinder.setMaxAreaRadius(100);
 	contourFinder.setThreshold(15);
 	contourFinder.getTracker().setMaximumAge(30);
     
     //setup background
-	backgroundDifferencer.setLearningTime(900);
-	backgroundDifferencer.setThresholdValue(10);
+	//backgroundDifferencer.setLearningTime(900);
+	//backgroundDifferencer.setThresholdValue(10);
     
 	//set up optical flow
 	//opticalFlow.allocate( width*TRACKING_SCALE_FACTOR, height*TRACKING_SCALE_FACTOR );
@@ -267,8 +265,9 @@ void ofxTSPSPeopleTracker::trackPeople()
 	//learn background (either in reset or additive)
 	if (p_Settings->bLearnBackground){
 		cout << "Learning Background" << endl;
-		backgroundDifferencer.reset();
-        backgroundDifferencer.update(warpedImage, backgroundImage);
+		//backgroundDifferencer.reset();
+        //backgroundDifferencer.update(warpedImage, backgroundImage);
+        copy( warpedImage, backgroundImage);
         backgroundImage.update();
         //grayBg = grayImageWarped;
 	}
@@ -284,28 +283,31 @@ void ofxTSPSPeopleTracker::trackPeople()
 	}*/
 	
     // set threshold
-    backgroundDifferencer.setThresholdValue( p_Settings->threshold );
+    //backgroundDifferencer.setThresholdValue( p_Settings->threshold );
 	contourFinder.setThreshold(p_Settings->threshold);
     
 	if(p_Settings->trackType == TRACK_ABSOLUTE){
-        backgroundDifferencer.setDifferenceMode( RunningBackground::ABSOLUTE );
+        //backgroundDifferencer.setDifferenceMode( RunningBackground::ABSOLUTE );
         //grayDiff.absDiff(grayBg, grayImageWarped);
+        absdiff( backgroundImage, warpedImage, differencedImage);
 	}
 	else{
 		//grayDiff = grayImageWarped;
 		if(p_Settings->trackType == TRACK_LIGHT){
-            backgroundDifferencer.setDifferenceMode( RunningBackground::BRIGHTER );            
+            //backgroundDifferencer.setDifferenceMode( RunningBackground::BRIGHTER );            
 			//grayDiff = grayBg - grayImageWarped;
 			//cvSub(grayBg.getCvImage(), grayDiff.getCvImage(), grayDiff.getCvImage());
+            subtract( warpedImage, backgroundImage, differencedImage);
 		}
 		else if(p_Settings->trackType == TRACK_DARK){ 
-            backgroundDifferencer.setDifferenceMode( RunningBackground::DARKER );            
+            //backgroundDifferencer.setDifferenceMode( RunningBackground::DARKER );            
 			//cvSub(grayDiff.getCvImage(), grayBg.getCvImage(), grayDiff.getCvImage());
 			//grayDiff = grayImageWarped - grayBg;
+            subtract ( backgroundImage, warpedImage, differencedImage);
 		}
 	}
     
-    backgroundDifferencer.update(differencedImage, backgroundImage);
+    //backgroundDifferencer.update(differencedImage, backgroundImage);
     differencedImage.update();
 	
 	//-----------------------
@@ -349,8 +351,11 @@ void ofxTSPSPeopleTracker::trackPeople()
 	//sprintf(pringString, "found %i haar items this frame", (int) haarRects.size());
 	ofLog(OF_LOG_VERBOSE, pringString);
 	
-    contourFinder.findContours( cameraImage ) ;//differencedImage );
-	//contourFinder.findContours(grayDiff, p_Settings->minBlob*width*height, p_Settings->maxBlob*width*height, 50, p_Settings->bFindHoles);
+    //setup stuff for min + max size
+    contourFinder.setMinArea( p_Settings->minBlob*width*height );
+    contourFinder.setMaxArea( p_Settings->maxBlob*width*height );
+    
+    contourFinder.findContours( differencedImage );
 	//persistentTracker.trackBlobs(contourFinder.blobs);
 	
     // TO:DO!!!!
@@ -447,11 +452,10 @@ void ofxTSPSPeopleTracker::trackPeople()
         ofxTSPSPerson* p = (*it).second;
         if (p == NULL){
             // wtfz
-            ++it;
-            continue;
-        }
-        if (p->age > 60){
-            cout<<"erase "<<it->first<<endl;
+            trackedPeople.erase(it++);
+        /*} else if (p->age > 60){
+            trackedPeople.erase(it++);
+        */} else if ( !(tracker.existsPrevious((*it).first) && tracker.existsCurrent((*it).first)) && !tracker.existsCurrent((*it).first) ){
             trackedPeople.erase(it++);
         } else {
             ++it;
@@ -483,9 +487,17 @@ void ofxTSPSPeopleTracker::trackPeople()
 	//-----------------------	
 
     if (trackedPeople.size() > 0){
+        
         map<unsigned int,ofxTSPSPerson*>::iterator it;    
-        for (it=trackedPeople.begin(); it != trackedPeople.end(); ++it){
+        it = trackedPeople.begin();
+        while(it != trackedPeople.end()){
             ofxTSPSPerson* p = (*it).second;
+            if (p == NULL){
+                // wtfz
+                ++it;
+                continue;
+            }
+        
             ofPoint centroid = p->getCentroidNormalized(width, height);
     //			if(p_Settings->bUseHaarAsCenter && p->hasHaarRect()){
             
@@ -508,6 +520,8 @@ void ofxTSPSPeopleTracker::trackPeople()
             if (bWebSocketsEnabled){
                 webSocketServer.personMoved(p, centroid, width, height, p_Settings->bSendOscContours);
             }
+            
+            ++it;
         }
     }
     
@@ -720,6 +734,11 @@ void ofxTSPSPeopleTracker::drawBlobs( float drawWidth, float drawHeight){
             //draw blobs				
             //if //haarFinder is looking at these blobs, draw the area it's looking at
             ofxTSPSPerson* p = (*it).second;
+            
+            if (p == NULL){
+                //:(
+                continue;
+            }
             
             //draw contours 
             ofPushStyle();
