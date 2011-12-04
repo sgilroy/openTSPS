@@ -52,6 +52,6 @@
 #ifndef _TSPS_PEOPLETRACKER
 #define _TSPS_PEOPLETRACKER
 
-#include "ofxTSPSPeopleTracker.h"
+#include "PeopleTracker.h"
 
 #endif

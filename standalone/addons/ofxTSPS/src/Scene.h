@@ -1,5 +1,5 @@
 /*
- *  ofxTSPSScene.h
+ *  Scene.h
  *  TSPSPeopleVision
  *
  *  Created by Jim on 12/10/09.
@@ -30,11 +30,14 @@
  THE SOFTWARE.
  */
 
-class ofxTSPSScene {
-  public:
 
-	ofxTSPSScene();
+namespace ofxTSPS {
+    class Scene {
+      public:
 
-	ofPoint averageMotion;
-	float percentCovered;
+        Scene();
+
+        ofPoint averageMotion;
+        float percentCovered;
+    };
 };

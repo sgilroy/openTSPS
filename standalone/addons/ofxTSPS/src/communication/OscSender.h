@@ -1,6 +1,6 @@
 /***********************************************************************
 
- ofxTSPSOSCSender.h
+ OSCSender.h
  TSPSPeopleVision
 
  Copyright (c) 2009, LAB at Rockwell Group
@@ -44,27 +44,29 @@
 #pragma once
 
 #include "ofxOsc.h"
-#include "ofxTSPSPerson.h"
+#include "Person.h"
 
-class ofxTSPSOscSender : public ofxOscSender
-{
-	public :
+namespace ofxTSPS {
+    class OscSender : public ofxOscSender
+    {
+        public :
 
-	//"old" variables are to check for reroute
-	string	ip, oldip;
-	int		port, oldport;
+        //"old" variables are to check for reroute
+        string	ip, oldip;
+        int		port, oldport;
 
-	ofxTSPSOscSender();
-	ofxTSPSOscSender(string _ip, int _port);
-	void setupSender(string _ip, int _port);
-	void update();
-	void personEntered ( ofxTSPSPerson * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
-	void personMoved ( ofxTSPSPerson * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
-	void personUpdated ( ofxTSPSPerson * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
-	void personWillLeave ( ofxTSPSPerson * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
+        OscSender();
+        OscSender(string _ip, int _port);
+        void setupSender(string _ip, int _port);
+        void update();
+        void personEntered ( Person * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
+        void personMoved ( Person * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
+        void personUpdated ( Person * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
+        void personWillLeave ( Person * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool sendContours = false );
 
-	void send ( ofxOscMessage m );
-	void reroute(string _ip, int _port);
+        void send ( ofxOscMessage m );
+        void reroute(string _ip, int _port);
 
+    };
 };
 

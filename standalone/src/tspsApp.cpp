@@ -1,5 +1,7 @@
 #include "tspsApp.h"
 
+using namespace ofxTSPS;
+
 class TSPSPersonAttributes {
 public:
 	TSPSPersonAttributes(){
@@ -119,14 +121,14 @@ void tspsApp::update(){
         
 		//iterate through the people
 		for(int i = 0; i < peopleTracker.totalPeople(); i++){
-			ofxTSPSPerson* p = peopleTracker.personAtIndex(i);
+			Person* p = peopleTracker.personAtIndex(i);
             if (cameraState == CAMERA_KINECT) p->depth = kinect.getDistanceAt( p->centroid );
 		}
 	}
 }
 
 //delegate methods for people entering and exiting
-void tspsApp::personEntered( ofxTSPSPerson* newPerson, ofxTSPSScene* scene )
+void tspsApp::personEntered( Person* newPerson, Scene* scene )
 {
 	newPerson->customAttributes = new TSPSPersonAttributes();
 
@@ -135,7 +137,7 @@ void tspsApp::personEntered( ofxTSPSPerson* newPerson, ofxTSPSScene* scene )
 	drawStatus[0] = 10;
 }
 
-void tspsApp::personMoved( ofxTSPSPerson* activePerson, ofxTSPSScene* scene )
+void tspsApp::personMoved( Person* activePerson, Scene* scene )
 {
 
 	//do something with the moving person
@@ -143,14 +145,14 @@ void tspsApp::personMoved( ofxTSPSPerson* activePerson, ofxTSPSScene* scene )
 	drawStatus[1] = 10;
 }
 
-void tspsApp::personWillLeave( ofxTSPSPerson* leavingPerson, ofxTSPSScene* scene )
+void tspsApp::personWillLeave( Person* leavingPerson, Scene* scene )
 {
 	//do something to clean up
 	ofLog(OF_LOG_VERBOSE, "person %d left after being %d frames in the system\n", leavingPerson->pid, leavingPerson->age);
 	drawStatus[2] = 10;
 }
 
-void tspsApp::personUpdated( ofxTSPSPerson* updatedPerson, ofxTSPSScene* scene )
+void tspsApp::personUpdated( Person* updatedPerson, Scene* scene )
 {
 	TSPSPersonAttributes* attrbs = (TSPSPersonAttributes*)updatedPerson->customAttributes;
 	attrbs->hasBeard = true;

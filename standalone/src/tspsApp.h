@@ -16,21 +16,20 @@
     // kinect support
     #include "ofxKinect.h"
 
-    #define TSPS_HOME_PAGE "http://opentsps.com"
-
     enum {
         CAMERA_NOT_INITED,
         CAMERA_KINECT,
         CAMERA_VIDEOGRABBER
     };
 
+using namespace ofxTSPS;
 
 /*********************************************************
     APP
 *********************************************************/
 
 
-class tspsApp : public ofBaseApp, public ofxPersonListener {
+class tspsApp : public ofBaseApp, public PersonListener {
 
 	public:
 		
@@ -48,10 +47,10 @@ class tspsApp : public ofBaseApp, public ofxPersonListener {
         
         // TSPS events
     
-		void personEntered( ofxTSPSPerson* newPerson, ofxTSPSScene* scene );
-		void personMoved( ofxTSPSPerson* activePerson, ofxTSPSScene* scene );
-		void personWillLeave( ofxTSPSPerson* leavingPerson, ofxTSPSScene* scene );
-		void personUpdated( ofxTSPSPerson* updatedPerson, ofxTSPSScene* scene );
+    void personEntered( Person* newPerson, Scene* scene );
+		void personMoved( Person* activePerson, Scene* scene );
+		void personWillLeave( Person* leavingPerson, Scene* scene );
+		void personUpdated( Person* updatedPerson, Scene* scene );
             
         #ifdef _USE_LIVE_VIDEO
 
@@ -86,7 +85,7 @@ class tspsApp : public ofBaseApp, public ofxPersonListener {
 		ofImage background;
 
 
-	ofxTSPSPeopleTracker peopleTracker;
+	PeopleTracker peopleTracker;
 	    
     
     
