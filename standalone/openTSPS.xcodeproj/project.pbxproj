@@ -15,7 +15,6 @@
 		2E592936144F2BAA00E795EA /* usb_libusb10.c in Sources */ = {isa = PBXBuildFile; fileRef = 2E5928F2144F2BAA00E795EA /* usb_libusb10.c */; };
 		2E592937144F2BAA00E795EA /* usb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E5928FA144F2BAA00E795EA /* usb-1.0.a */; };
 		2E592938144F2BAA00E795EA /* ofxKinect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2E59292F144F2BAA00E795EA /* ofxKinect.cpp */; };
-		2E6785D51430B7E30083AE30 /* ofxFileDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2E6785D31430B7E30083AE30 /* ofxFileDialog.cpp */; };
 		A94EB0E31437A5B000B6437B /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A94EB0E21437A5B000B6437B /* ApplicationServices.framework */; };
 		A94EB12B1437A68B00B6437B /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = A94EB0F41437A68B00B6437B /* cdecode.c */; };
 		A94EB12C1437A68B00B6437B /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = A94EB0F51437A68B00B6437B /* cencode.c */; };
@@ -184,8 +183,6 @@
 		2E59292E144F2BAA00E795EA /* ofxBase3DVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBase3DVideo.h; sourceTree = "<group>"; };
 		2E59292F144F2BAA00E795EA /* ofxKinect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxKinect.cpp; sourceTree = "<group>"; };
 		2E592930144F2BAA00E795EA /* ofxKinect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxKinect.h; sourceTree = "<group>"; };
-		2E6785D31430B7E30083AE30 /* ofxFileDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxFileDialog.cpp; sourceTree = "<group>"; };
-		2E6785D41430B7E30083AE30 /* ofxFileDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxFileDialog.h; sourceTree = "<group>"; };
 		2ECB4D4914586B5900040AA3 /* icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = icon.icns; sourceTree = "<group>"; };
 		A94EB0E21437A5B000B6437B /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		A94EB0EE1437A68B00B6437B /* cdecode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cdecode.h; sourceTree = "<group>"; };
@@ -854,24 +851,6 @@
 			path = src;
 			sourceTree = "<group>";
 		};
-		2E6785D11430B7E30083AE30 /* ofxFileDialog */ = {
-			isa = PBXGroup;
-			children = (
-				2E6785D21430B7E30083AE30 /* src */,
-			);
-			name = ofxFileDialog;
-			path = addons/ofxFileDialog;
-			sourceTree = "<group>";
-		};
-		2E6785D21430B7E30083AE30 /* src */ = {
-			isa = PBXGroup;
-			children = (
-				2E6785D31430B7E30083AE30 /* ofxFileDialog.cpp */,
-				2E6785D41430B7E30083AE30 /* ofxFileDialog.h */,
-			);
-			path = src;
-			sourceTree = "<group>";
-		};
 		2EE5A0BF146DD99E00D4B8AE /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1164,7 +1143,6 @@
 				E765FF51148429C6003CD346 /* ofxTuioWrapper */,
 				E765FF44148429A6003CD346 /* ofxCvHaarTracker */,
 				E765FF281484297E003CD346 /* ofxLabGui */,
-				2E6785D11430B7E30083AE30 /* ofxFileDialog */,
 				2EE789AF1430F83700CFEE9D /* ofxKinect */,
 				E741C11B142F6FBF0040D77D /* ofxMSAInteractiveObject */,
 				E741C127142F6FBF0040D77D /* ofxOpenCVExtensions */,
@@ -2064,7 +2042,6 @@
 				E741C257142F70780040D77D /* ofxCvHaarFinder.cpp in Sources */,
 				E741C258142F70780040D77D /* ofxCvImage.cpp in Sources */,
 				E741C259142F70780040D77D /* ofxCvShortImage.cpp in Sources */,
-				2E6785D51430B7E30083AE30 /* ofxFileDialog.cpp in Sources */,
 				A94EB12B1437A68B00B6437B /* cdecode.c in Sources */,
 				A94EB12C1437A68B00B6437B /* cencode.c in Sources */,
 				A94EB1301437A68B00B6437B /* ofxWebSocketConnection.cpp in Sources */,
