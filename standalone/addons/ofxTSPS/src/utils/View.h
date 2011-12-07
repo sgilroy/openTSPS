@@ -180,15 +180,10 @@ namespace ofxTSPS {
             return bActive;
         }
         
-        ofImage getColorImage(){
+        ofImage& getColorImage(){
             return image;
         }
-        
-        // ZACK BOKA: for accessing the color image for this view
-        /*ofxCvColorImage getColorImage() {
-            return cameraImage;//colorImage;
-        }*/
-        
+                
     protected:
         string title, shortTitle;
         ofColor color;

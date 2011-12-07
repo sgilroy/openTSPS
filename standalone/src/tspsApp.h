@@ -47,7 +47,7 @@ class tspsApp : public ofBaseApp, public PersonListener {
         
         // TSPS events
     
-    void personEntered( Person* newPerson, Scene* scene );
+		void personEntered( Person* newPerson, Scene* scene );
 		void personMoved( Person* activePerson, Scene* scene );
 		void personWillLeave( Person* leavingPerson, Scene* scene );
 		void personUpdated( Person* updatedPerson, Scene* scene );
@@ -71,7 +71,7 @@ class tspsApp : public ofBaseApp, public PersonListener {
     
 		int camWidth, camHeight;
 
-        ofImage             cameraImage;
+		ofImage cameraImage;
     	
 	//status bar stuff
 		ofImage statusBar;

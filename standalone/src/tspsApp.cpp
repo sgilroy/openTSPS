@@ -103,7 +103,7 @@ void tspsApp::update(){
         }
     }    
     #else
-    vidPlayer.idleMovie();
+    vidPlayer.update();
     bNewFrame = vidPlayer.isFrameNew();
 	#endif
     
@@ -112,10 +112,12 @@ void tspsApp::update(){
         if ( cameraState == CAMERA_KINECT ){
 			cameraImage.setFromPixels(kinect.getDepthPixels(), camWidth,camHeight, OF_IMAGE_GRAYSCALE);
         } else {
-			cameraImage.setFromPixels(vidGrabber.getPixels(), camWidth,camHeight, OF_IMAGE_COLOR);
+			cameraImage.setFromPixels(vidGrabber.getPixelsRef());
+			cameraImage.setImageType(OF_IMAGE_GRAYSCALE);
         }
 #else
-        cameraImage.setFromPixels(vidPlayer.getPixels(), camWidth,camHeight, OF_IMAGE_COLOR);
+        cameraImage.setFromPixels(vidPlayer.getPixelsRef());
+		cameraImage.setImageType(OF_IMAGE_GRAYSCALE);
 #endif
         peopleTracker.update(cameraImage);
         

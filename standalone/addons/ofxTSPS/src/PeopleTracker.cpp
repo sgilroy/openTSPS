@@ -30,10 +30,10 @@ namespace ofxTSPS {
         width  = w;
         height = h;
         
-        cameraImage.allocate(width, height, OF_IMAGE_COLOR);
-        warpedImage.allocate(width, height, OF_IMAGE_COLOR);
-        backgroundImage.allocate(width, height, OF_IMAGE_COLOR);
-        differencedImage.allocate(width, height, OF_IMAGE_COLOR);
+        cameraImage.allocate(width, height, OF_IMAGE_GRAYSCALE);
+        warpedImage.allocate(width, height, OF_IMAGE_GRAYSCALE);
+        backgroundImage.allocate(width, height, OF_IMAGE_GRAYSCALE);
+        differencedImage.allocate(width, height, OF_IMAGE_GRAYSCALE);
         
         //setup contour finder
         contourFinder.setThreshold(15);
@@ -95,8 +95,8 @@ namespace ofxTSPS {
         
         setActiveView(PROCESSED_VIEW);
         
-        //persistentTracker.setListener( this );
-        //updateSettings();
+		contourFinder.setAutoThreshold( false );
+		
         lastHaarFile = "";
     }
 
@@ -166,24 +166,12 @@ namespace ofxTSPS {
     //---------------------------------------------------------------------------
     #pragma mark Track People
     //---------------------------------------------------------------------------
-    void PeopleTracker::update(ofImage _cameraImage)
+    void PeopleTracker::update(const ofImage& _cameraImage)
     {
-        //grayImage = image;
-        //colorImage = image;
         cameraImage = _cameraImage;
         updateSettings();
         trackPeople();
     }
-
-    /*
-    //---------------------------------------------------------------------------
-    void PeopleTracker::update(ofxCvGrayscaleImage image)
-    {
-        grayImage = image;
-        
-        updateSettings();
-        trackPeople();
-    }*/
 
     //---------------------------------------------------------------------------
     void PeopleTracker::updateSettings()
@@ -234,7 +222,7 @@ namespace ofxTSPS {
         //-------------------
             
         //warp background
-        getQuadSubImage(&cameraImage, &warpedImage, &p_Settings->quadWarpScaled, OF_IMAGE_COLOR);
+        getQuadSubImage(&cameraImage, &warpedImage, &p_Settings->quadWarpScaled, OF_IMAGE_GRAYSCALE);
         
         //graySmallImage.scaleIntoMe(grayImageWarped);
         //grayBabyImage.scaleIntoMe(grayImageWarped);
@@ -253,16 +241,16 @@ namespace ofxTSPS {
             
         //learn background (either in reset or additive)
         if (p_Settings->bLearnBackground){
-            cout << "Learning Background" << endl;
             //backgroundDifferencer.reset();
             //backgroundDifferencer.update(warpedImage, backgroundImage);
-            copy( warpedImage, backgroundImage);
-            backgroundImage.update();
+            //copy( warpedImage, backgroundImage);
+			backgroundImage = warpedImage;
+//             backgroundImage.update();
             //grayBg = grayImageWarped;
         }
         
         //progressive relearn background
-        // TO:DO
+        // TODO
         /*if (p_Settings->bLearnBackgroundProgressive){
             if (p_Settings->bLearnBackground) floatBgImg = grayBg;
             floatBgImg.addWeighted( grayImageWarped, p_Settings->fLearnRate * .00001);
@@ -303,6 +291,7 @@ namespace ofxTSPS {
         // IMAGE TREATMENT
         //-----------------------
         if(p_Settings->bSmooth){ // TO:DO
+			blur( differencedImage , p_Settings->smooth*2 +1 );
             //blur();
             //grayDiff.blur((p_Settings->smooth * 2) + 1); //needs to be an odd number
         }
@@ -314,7 +303,7 @@ namespace ofxTSPS {
         
         //threshold	
         //grayDiff.threshold(p_Settings->threshold);
-        
+        threshold(differencedImage, p_Settings->threshold);
         //-----------------------
         // TRACKING
         //-----------------------	
@@ -345,6 +334,8 @@ namespace ofxTSPS {
         contourFinder.setMaxArea( p_Settings->maxBlob*width*height );
         
         contourFinder.findContours( differencedImage );
+		
+		cout << "found contours" << contourFinder.size() << endl;
         //persistentTracker.trackBlobs(contourFinder.blobs);
         
         // TO:DO!!!!
@@ -1235,7 +1226,7 @@ namespace ofxTSPS {
     // for getting a color version of the adjusted view image
     // NOTE:  only works if the adjusted view is currently in color
     //        (this parameter can be set in the GUI under the 'views' tab)
-    ofImage PeopleTracker::getAdjustedImageInColor() {
+    ofImage& PeopleTracker::getAdjustedImageInColor() {
         if (p_Settings->bAdjustedViewInColor)
             return adjustedView.getColorImage();
     }

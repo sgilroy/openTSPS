@@ -112,7 +112,7 @@ namespace ofxTSPS {
             //set up and update
         
             void setup(int w, int h);				//Call during setup with camera width & height
-            void update(ofImage image);		//Call with sequential camera images
+            void update(const ofImage& image);		//Call with sequential camera images
             //void update(ofImage image); //Call with sequential camera images
             void mousePressed(ofMouseEventArgs &e);	
             
@@ -210,7 +210,7 @@ namespace ofxTSPS {
             // for getting a color version of the adjusted view image
             // NOTE:  only works if the adjusted view is currently in color	and not grayscale
             //        (this parameter can be set in the GUI under the 'views' tab)
-            ofImage getAdjustedImageInColor();	
+            ofImage& getAdjustedImageInColor();	
             
             // for accessing which view is the current view
             bool inCameraView();
@@ -260,7 +260,6 @@ namespace ofxTSPS {
             //ofxCvHaarTracker    haarTracker;
             
             // optical flow
-            
             //ofxCvOpticalFlowLK	opticalFlow;
             
             // switches for filters
