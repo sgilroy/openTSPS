@@ -7,6 +7,3 @@
 [submodule "standalone/addons/ofxMSAInteractiveObject"]
 	path = standalone/addons/ofxMSAInteractiveObject
 	url = https://github.com/Flightphase/ofxMSAInteractiveObject
-[submodule "standalone/addons/ofxTuioWrapper"]
-	path = standalone/addons/ofxTuioWrapper
-	url = https://github.com/arturoc/ofxTuioWrapper/
