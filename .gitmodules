@@ -1,0 +1,12 @@
+[submodule "standalone/addons/ofxCv"]
+	path = standalone/addons/ofxCv
+	url = https://github.com/kylemcdonald/ofxCv
+[submodule "standalone/addons/ofxKinect"]
+	path = standalone/addons/ofxKinect
+	url = https://github.com/ofTheo/ofxKinect.git
+[submodule "standalone/addons/ofxMSAInteractiveObject"]
+	path = standalone/addons/ofxMSAInteractiveObject
+	url = https://github.com/Flightphase/ofxMSAInteractiveObject
+[submodule "standalone/addons/ofxTuioWrapper"]
+	path = standalone/addons/ofxTuioWrapper
+	url = https://github.com/arturoc/ofxTuioWrapper/
