@@ -1238,12 +1238,12 @@
 				2E4A1455144341EA0038753B /* gui */,
 				2EE5A0BF146DD99E00D4B8AE /* utils */,
 				E741C137142F6FBF0040D77D /* ofxTSPS.h */,
-				E769FDFC148FC07A00C202B1 /* PeopleTracker.cpp */,
 				E769FDFD148FC07A00C202B1 /* PeopleTracker.h */,
-				E769FDFE148FC07A00C202B1 /* Person.cpp */,
+				E769FDFC148FC07A00C202B1 /* PeopleTracker.cpp */,
 				E769FDFF148FC07A00C202B1 /* Person.h */,
-				E769FE00148FC07A00C202B1 /* Scene.cpp */,
+				E769FDFE148FC07A00C202B1 /* Person.cpp */,
 				E769FE01148FC07A00C202B1 /* Scene.h */,
+				E769FE00148FC07A00C202B1 /* Scene.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";

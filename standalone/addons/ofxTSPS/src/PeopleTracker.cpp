@@ -96,6 +96,9 @@ namespace ofxTSPS {
         setActiveView(PROCESSED_VIEW);
         
 		contourFinder.setAutoThreshold( false );
+		contourFinder.getTracker().setMaximumAge(5);
+		contourFinder.getTracker().setMaximumDistance(300);
+		contourFinder.setSimplify(false);
 		
         lastHaarFile = "";
     }
@@ -334,8 +337,7 @@ namespace ofxTSPS {
         contourFinder.setMaxArea( p_Settings->maxBlob*width*height );
         
         contourFinder.findContours( differencedImage );
-		
-		cout << "found contours" << contourFinder.size() << endl;
+	
         //persistentTracker.trackBlobs(contourFinder.blobs);
         
         // TO:DO!!!!
@@ -454,13 +456,13 @@ namespace ofxTSPS {
         
         //update views
         
-        cameraView.update(cameraImage);
-        if (p_Settings->bAdjustedViewInColor)
-            adjustedView.update(warpedImage);
-        else
-            adjustedView.update(warpedImage);
-        bgView.update(backgroundImage);
-        processedView.update(differencedImage);
+//        cameraView.update(cameraImage);
+//        if (p_Settings->bAdjustedViewInColor)
+//            adjustedView.update(warpedImage);
+//        else
+//            adjustedView.update(warpedImage);
+//        bgView.update(backgroundImage);
+//        processedView.update(differencedImage);
         
         //-----------------------
         // COMMUNICATION
@@ -641,6 +643,7 @@ namespace ofxTSPS {
             ofSetHexColor(0xffffff);
         
             //draw large image
+		
             if (activeViewIndex ==  CAMERA_SOURCE_VIEW){
                 cameraView.drawLarge(activeView.x, activeView.y, activeView.width, activeView.height);		
                 gui.drawQuadGui( activeView.x, activeView.y, activeView.width, activeView.height );
@@ -729,6 +732,7 @@ namespace ofxTSPS {
                     ofSetHexColor(0xc4b68e);
                 }
                 ofBeginShape();
+				
                 for( int j=0; j<p->contour.size(); j++ ) {
                     ofVertex( p->contour[j].x, p->contour[j].y );
                 }
@@ -810,7 +814,8 @@ namespace ofxTSPS {
     //---------------------------------------------------------------------------
     void PeopleTracker::mousePressed( ofMouseEventArgs &e )
     {
-        if (isInsideRect(e.x, e.y, cameraView)){
+        //if (isInsideRect(e.x, e.y, cameraView)){ //TODO replace these calls
+		if(cameraView.inside(e.x,e.y)){
             activeViewIndex = CAMERA_SOURCE_VIEW;
             cameraView.setActive();
             adjustedView.setActive(false);

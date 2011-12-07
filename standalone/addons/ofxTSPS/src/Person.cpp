@@ -56,7 +56,8 @@ namespace ofxTSPS {
         }
         
         velocity	 = c - centroid;
-        contour		 = toOf(contourFinder.getConvexHull(oid));
+        //contour		 = toOf(contourFinder.getConvexHull(oid));
+		contour		 = contourFinder.getPolyline(oid);
         area		 = contourFinder.getContourArea(oid);//blob.area;
         boundingRect = toOf(contourFinder.getBoundingRect(oid));//blob.boundingRect;
         

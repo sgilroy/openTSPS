@@ -20,29 +20,19 @@ namespace ofxTSPS {
         
         //-------------------------------------------------
         View(){
-            bImage = false;
+			image = NULL;
         }
         
         //-------------------------------------------------
         void setup( int _width, int _height){
             ofAddListener(ofEvents.mouseMoved, this, &View::mouseMoved);
             bFontLoaded = bActive = bRolled = false;
-            //image.allocate(_width, _height);
-            //colorImage.allocate(_width, _height);
             bGray = true;
         };
         
-        //-------------------------------------------------
-        /*void setImage(ofxCvGrayscaleImage _image){
-            bImage = true;
-            bGray = true;
-            image = _image;
-        }*/
-        
-        void setImage(ofImage _image){
-            bImage = true;
+        void setImage(ofImage& _image){
+			image = &_image;
             bGray = false;
-            image = _image;
         }
         
         //-------------------------------------------------
@@ -75,25 +65,6 @@ namespace ofxTSPS {
             title = _title;
             if (_shortTitle == "") shortTitle = title;
             else shortTitle = _shortTitle;
-        }
-        
-        //-------------------------------------------------
-        /*void update(ofxCvGrayscaleImage _image){
-            bImage = true;
-            bGray = true;
-            image = _image;
-        }
-        
-        void update(ofxCvColorImage _image){
-            bImage = true;
-            bGray = false;
-            colorImage = _image;
-        }*/
-        
-        void update(ofImage _image){
-            bImage = true;
-            bGray = false;
-            image = _image;
         }
         
         //-------------------------------------------------
@@ -130,7 +101,9 @@ namespace ofxTSPS {
             }
             
             if (bRolled || bActive) ofSetColor(color.r, color.g, color.b);
-            image.draw( 0,0, width, height );
+			if(image != NULL){
+				image->draw( 0,0, width, height );
+			}
             // ZACK BOKA: draw the correct image, either color or grayscale
             /*
             if( image.bAllocated && bImage && bGray ) image.draw( 0,0, width, height );
@@ -144,7 +117,10 @@ namespace ofxTSPS {
         
         //-------------------------------------------------
         void drawLarge( float _x, float _y, float _width, float _height){		
-            image.draw( _x, _y, _width, _height);
+            if (image != NULL) {
+				image->draw( _x, _y, _width, _height);
+			}
+			
             // ZACK BOKA: draw the correct image, either color or grayscale		
             /*if( image.bAllocated && bImage && bGray) image.draw( _x, _y, _width, _height);
             else if (colorImage.bAllocated && bImage && !bGray) colorImage.draw(_x,_y,_width,_height);
@@ -181,14 +157,14 @@ namespace ofxTSPS {
         }
         
         ofImage& getColorImage(){
-            return image;
+            return *image;
         }
                 
     protected:
         string title, shortTitle;
         ofColor color;
         
-        ofImage image;
+        ofImage* image;
         //ofxCvGrayscaleImage image;
         // ZACK BOKA: added color image as a possible image for the view
         //ofxCvColorImage colorImage;
@@ -199,7 +175,7 @@ namespace ofxTSPS {
         bool bActive;
         bool bRolled;
         bool bFontLoaded;
-        bool bImage;
+
     };
 };
 

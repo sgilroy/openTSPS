@@ -235,7 +235,6 @@ namespace ofxTSPS {
             //ofxCv::RunningBackground backgroundDifferencer;
             
             //more specific CV images for processing
-            
             CPUImageFilter		grayDiff;
             //ofxCvShortImage		floatBgImg;
             
@@ -278,13 +277,11 @@ namespace ofxTSPS {
             bool bWebSocketsEnabled;
         
             //gui
-
             GuiManager gui;
             bool guiLoaded;
             float activeHeight, activeWidth;
         
             // layout functions
-        
             ofTrueTypeFont font;
             bool bFontLoaded;
             

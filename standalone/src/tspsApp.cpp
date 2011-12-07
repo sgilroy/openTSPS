@@ -6,11 +6,9 @@ class TSPSPersonAttributes {
 public:
 	TSPSPersonAttributes(){
 		height = 0;
-		hasBeard = false;
 	}
 
 	float height;
-	bool hasBeard; //this is a joke
 };
 
 //--------------------------------------------------------------
@@ -41,7 +39,6 @@ void tspsApp::setup(){
     bKinectConnected = (kinect.numAvailableDevices() >= 1);
     
     if (kinect.numAvailableDevices() < 1 || !peopleTracker.useKinect()){
-
         kinect.clear();        
         bKinect = false;
         initVideoInput();
@@ -58,12 +55,6 @@ void tspsApp::setup(){
 	#endif
 
 	
-	/*
-	//THIS IS HOW YOU CAN ADD CUSTOM PARAMETERS TO THE GUI
-	peopleTracker.addSlider("custom INTEGER", &itestValue, 0, ofGetWidth());
-	peopleTracker.addSlider("custom FLOAT", &ftestValue, 0, ofGetHeight());
-	peopleTracker.addToggle("custom BOOL", &btestValue);
-	*/
 	peopleTracker.setActiveDimensions( ofGetWidth(), ofGetHeight()-68 );
 
 	//load GUI / interface images
@@ -157,7 +148,6 @@ void tspsApp::personWillLeave( Person* leavingPerson, Scene* scene )
 void tspsApp::personUpdated( Person* updatedPerson, Scene* scene )
 {
 	TSPSPersonAttributes* attrbs = (TSPSPersonAttributes*)updatedPerson->customAttributes;
-	attrbs->hasBeard = true;
 
 	ofLog(OF_LOG_VERBOSE, "updated %d person\n", updatedPerson->pid);
 	drawStatus[1] = 10;
@@ -235,7 +225,6 @@ void tspsApp::initVideoInput(){
         
         if ( !cameraState == CAMERA_KINECT){            
             kinect.init();
-            kinect.setVerbose(true);
             bool bOpened = kinect.open();
             if (bOpened){
                 cameraState = CAMERA_KINECT;
