@@ -541,12 +541,12 @@
 		2E4A144C144341EA0038753B /* communication */ = {
 			isa = PBXGroup;
 			children = (
-				E769FE0D148FC09500C202B1 /* OscSender.cpp */,
 				E769FE0E148FC09500C202B1 /* OscSender.h */,
-				E769FE0F148FC09600C202B1 /* TCPSender.cpp */,
+				E769FE0D148FC09500C202B1 /* OscSender.cpp */,
 				E769FE10148FC09600C202B1 /* TCPSender.h */,
-				E769FE11148FC09600C202B1 /* TUIOSender.cpp */,
+				E769FE0F148FC09600C202B1 /* TCPSender.cpp */,
 				E769FE12148FC09600C202B1 /* TUIOSender.h */,
+				E769FE11148FC09600C202B1 /* TUIOSender.cpp */,
 				E769FE13148FC09600C202B1 /* WebSocketSender.cpp */,
 				E769FE14148FC09600C202B1 /* WebSocketSender.h */,
 			);

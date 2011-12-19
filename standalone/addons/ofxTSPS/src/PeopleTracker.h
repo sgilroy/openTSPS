@@ -105,9 +105,7 @@ namespace ofxTSPS {
         virtual void personUpdated(Person* person, Scene* scene) = 0;
     };
 
-
-
-    class PeopleTracker {//: public ofxCvBlobListener {
+    class PeopleTracker {
         public:
             //set up and update
         
@@ -231,7 +229,8 @@ namespace ofxTSPS {
             map<unsigned int,Person*> trackedPeople;
             Scene scene;
             
-            ofImage cameraImage, warpedImage, backgroundImage, differencedImage;
+			bool firstImage;
+            ofImage cameraImage, warpedImage, backgroundImage, differencedImage, lastImage;
             //ofxCv::RunningBackground backgroundDifferencer;
             
             //more specific CV images for processing
@@ -260,7 +259,8 @@ namespace ofxTSPS {
             
             // optical flow
             //ofxCvOpticalFlowLK	opticalFlow;
-            
+			cv::Mat flow;
+		
             // switches for filters
             Settings *p_Settings;
         

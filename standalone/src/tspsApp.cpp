@@ -17,8 +17,8 @@ void tspsApp::setup(){
 	ofSetFrameRate(60);
 	ofBackground(223, 212, 190);
 	
-	camWidth = 640;
-	camHeight = 480;
+	camWidth = 320;
+	camHeight = 240;
     
     // allocate images + setup people tracker
 	

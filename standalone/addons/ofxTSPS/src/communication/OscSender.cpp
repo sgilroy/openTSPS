@@ -83,6 +83,8 @@ namespace ofxTSPS {
         m.addFloatArg(p->opticalFlowVectorAccumulation.x);
         m.addFloatArg(p->opticalFlowVectorAccumulation.y);
         
+		m.addFloatArg(p->depth);							//13
+		
         if (bSendContours){
             //any args after 9 will be contours
             for (int i=0; i<p->simpleContour.size(); i++){
@@ -114,6 +116,8 @@ namespace ofxTSPS {
         m.addFloatArg(p->opticalFlowVectorAccumulation.x);
         m.addFloatArg(p->opticalFlowVectorAccumulation.y);
         
+		m.addFloatArg(p->depth);							//13
+		
         if (bSendContours){
             //any args after 9 will be contours
             for (int i=0; i<p->simpleContour.size(); i++){
@@ -145,6 +149,8 @@ namespace ofxTSPS {
         m.addFloatArg(p->opticalFlowVectorAccumulation.x);
         m.addFloatArg(p->opticalFlowVectorAccumulation.y);
         
+		m.addFloatArg(p->depth);							//13
+		
         if (bSendContours){
             //any args after 9 will be contours
             for (int i=0; i<p->simpleContour.size(); i++){
@@ -158,26 +164,28 @@ namespace ofxTSPS {
 
     void OscSender::personWillLeave ( Person * p, ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours )
     {
-        ofxOscBundle b;
-        ofxOscMessage m;
+        ofxOscBundle b;								
+        ofxOscMessage m;		
         m.setAddress("TSPS/personWillLeave/");
-        m.addIntArg(p->pid);
-        m.addIntArg(p->age);
-        m.addFloatArg(centroid.x);
-        m.addFloatArg(centroid.y);
-        m.addFloatArg(p->velocity.x);
-        m.addFloatArg(p->velocity.y);
+        m.addIntArg(p->pid);								//1
+        m.addIntArg(p->age);								//2
+        m.addFloatArg(centroid.x);							//3
+        m.addFloatArg(centroid.y);							//4
+        m.addFloatArg(p->velocity.x);						//5
+        m.addFloatArg(p->velocity.y);						//6
         
         ofRectangle boundingRect = p->getBoundingRectNormalized(cameraWidth,cameraHeight);
         
-        m.addFloatArg(boundingRect.x);
-        m.addFloatArg(boundingRect.y);
-        m.addFloatArg(boundingRect.width);
-        m.addFloatArg(boundingRect.height);
+        m.addFloatArg(boundingRect.x);						//7
+        m.addFloatArg(boundingRect.y);						//8
+        m.addFloatArg(boundingRect.width);					//9
+        m.addFloatArg(boundingRect.height);					//10
         
-        m.addFloatArg(p->opticalFlowVectorAccumulation.x);
-        m.addFloatArg(p->opticalFlowVectorAccumulation.y);
+        m.addFloatArg(p->opticalFlowVectorAccumulation.x);	//11
+        m.addFloatArg(p->opticalFlowVectorAccumulation.y);	//12
         
+		m.addFloatArg(p->depth);							//13
+		
         if (bSendContours){
             //any args after 11 will be contours
             for (int i=0; i<p->simpleContour.size(); i++){

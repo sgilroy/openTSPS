@@ -39,6 +39,8 @@ namespace ofxTSPS {
         contourFinder.setThreshold(15);
         contourFinder.getTracker().setMaximumAge(30);
         
+		firstImage = true;
+		
         //setup background
         //backgroundDifferencer.setLearningTime(900);
         //backgroundDifferencer.setThresholdValue(10);
@@ -225,7 +227,7 @@ namespace ofxTSPS {
         //-------------------
             
         //warp background
-        getQuadSubImage(&cameraImage, &warpedImage, &p_Settings->quadWarpScaled, OF_IMAGE_GRAYSCALE);
+        getQuadSubImage(cameraImage, warpedImage, p_Settings->quadWarpScaled, OF_IMAGE_GRAYSCALE);
         
         //graySmallImage.scaleIntoMe(grayImageWarped);
         //grayBabyImage.scaleIntoMe(grayImageWarped);
@@ -293,6 +295,7 @@ namespace ofxTSPS {
         //-----------------------
         // IMAGE TREATMENT
         //-----------------------
+		/*
         if(p_Settings->bSmooth){ // TO:DO
 			blur( differencedImage , p_Settings->smooth*2 +1 );
             //blur();
@@ -303,16 +306,36 @@ namespace ofxTSPS {
         if(p_Settings->bHighpass){ // TO:DO
             //grayDiff.highpass(p_Settings->highpassBlur, p_Settings->highpassNoise);
         }
-        
+        */
+		
         //threshold	
-        //grayDiff.threshold(p_Settings->threshold);
+        
+		
         threshold(differencedImage, p_Settings->threshold);
         //-----------------------
         // TRACKING
         //-----------------------	
         //find the optical flow
-        if (p_Settings->bTrackOpticalFlow){ // TO:DO
-            //opticalFlow.calc(grayLastImage, graySmallImage, 11);
+        if (p_Settings->bTrackOpticalFlow){ 
+			if(!firstImage) {
+				//opticalFlow.calc(grayLastImage, graySmallImage, 11);
+				calcOpticalFlowFarneback(
+										 toCv(lastImage),
+										 toCv(warpedImage),
+										 flow,
+										 
+										 .5,//panel.getValueF("pyrScale"),
+										 4,//panel.getValueF("levels"),
+										 2,//panel.getValueF("winsize"),
+										 2,//panel.getValueF("iterations"),
+										 7,//panel.getValueF("polyN"),
+										 1.5,//panel.getValueF("polySigma"),
+										 0 //panel.getValueB("OPTFLOW_FARNEBACK_GAUSSIAN") ? OPTFLOW_FARNEBACK_GAUSSIAN : 0
+										
+					);
+			}
+			firstImage = false;
+			lastImage.setFromPixels(warpedImage.getPixelsRef());
         }
         
         //accumulate and store all found haar features.
@@ -328,18 +351,16 @@ namespace ofxTSPS {
         }
         */
         
-        char pringString[1024];
+  //      char pringString[1024];
         //sprintf(pringString, "found %i haar items this frame", (int) haarRects.size());
-        ofLog(OF_LOG_VERBOSE, pringString);
+//        ofLog(OF_LOG_VERBOSE, pringString);
         
         //setup stuff for min + max size
-        contourFinder.setMinArea( p_Settings->minBlob*width*height );
-        contourFinder.setMaxArea( p_Settings->maxBlob*width*height );
-        
+        contourFinder.setMinArea( p_Settings->minBlob * width * height );
+        contourFinder.setMaxArea( p_Settings->maxBlob * width * height );
+		
         contourFinder.findContours( differencedImage );
-	
-        //persistentTracker.trackBlobs(contourFinder.blobs);
-        
+	        
         // TO:DO!!!!
         //scene.averageMotion = opticalFlow.flowInRegion(0,0,width,height);
         //scene.percentCovered = 0; 
@@ -693,7 +714,7 @@ namespace ofxTSPS {
     //---------------------------------------------------------------------------
     void PeopleTracker::drawBlobs( float drawWidth, float drawHeight){
         
-        float scaleVar = (float) drawWidth/width;
+        float scaleVar = drawWidth/width;
         
         ofFill();
         ofSetHexColor(0x333333);
@@ -705,6 +726,14 @@ namespace ofxTSPS {
         if (p_Settings->bTrackOpticalFlow){
             ofSetColor(34,151,210);
             //opticalFlow.draw(drawWidth,drawHeight);
+			for(int i = 0; i < flow.rows; i += 4) {
+				for(int j = 0; j < flow.cols; j += 4	) {
+					ofVec2f pt(j, i);
+					Vec2f& vec = flow.at<Vec2f>(i, j);
+					ofVec2f dst(j + vec[1], i + vec[0]);
+					ofLine(pt * scaleVar, dst * scaleVar);
+				} 
+			}
         }					
         
         ofPushMatrix();
@@ -742,6 +771,7 @@ namespace ofxTSPS {
                 if(p_Settings->bTrackOpticalFlow){
                     //purple optical flow arrow
                     ofSetHexColor(0xff00ff);
+					
                     //JG Doesn't really provide any helpful information since its so scattered
         //			ofLine(p->centroid.x, 
         //				   p->centroid.y, 
