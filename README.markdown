@@ -26,5 +26,8 @@ crack at the standalone app for other platforms!
 
 1. download openframeworks from here: [http://www.openframeworks.cc/download](http://www.openframeworks.cc/download )
 2. clone the TSPS directory into openframeworks/apps
-3. open the XCode project in openTSPS/openTSPSStandalone
-4. compile and run!
+3. pull all submodules: 
+  * git submodule init 
+  * git submodule foreach git pull origin master
+4. open the XCode project in openTSPS/openTSPSStandalone
+5. compile and run!
