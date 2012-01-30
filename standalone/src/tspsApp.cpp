@@ -17,8 +17,11 @@ void tspsApp::setup(){
 	ofSetFrameRate(60);
 	ofBackground(223, 212, 190);
 	
-	camWidth = 320;
-	camHeight = 240;
+    // TO-DO! NEED TO FIX THIS FOR OPTICAL FLOW,
+    // BUT KINECT NEEDS 640x480
+    
+	camWidth    = 640;
+	camHeight   = 480;
     
     // allocate images + setup people tracker
 	
@@ -87,7 +90,7 @@ void tspsApp::update(){
     if ( cameraState != CAMERA_NOT_INITED){
         if ( cameraState == CAMERA_KINECT ){
             kinect.update();
-            bNewFrame = true;//kinect.isFrameNew();
+            bNewFrame = kinect.isFrameNew();
         } else {
             vidGrabber.grabFrame();
             bNewFrame = vidGrabber.isFrameNew();
@@ -115,7 +118,8 @@ void tspsApp::update(){
 		//iterate through the people
 		for(int i = 0; i < peopleTracker.totalPeople(); i++){
 			Person* p = peopleTracker.personAtIndex(i);
-            if (cameraState == CAMERA_KINECT) p->depth = kinect.getDistanceAt( p->centroid );
+            cout<<p->centroid<<endl;
+            //if (cameraState == CAMERA_KINECT) p->depth = kinect.getDistanceAt( p->centroid );
 		}
 	}
 }
@@ -203,6 +207,18 @@ void tspsApp::keyPressed  (int key){
 		case 'f':{
 			ofToggleFullscreen();
 		} break;
+        case OF_KEY_UP:{
+            if (tilt <= 30){
+                tilt++;   
+                kinect.setCameraTiltAngle(tilt);
+            }
+        } break;
+        case OF_KEY_DOWN:{
+            if (tilt >= -30){
+                tilt--;   
+                kinect.setCameraTiltAngle(tilt);
+            }
+        } break;
 	}
 }
 
@@ -225,6 +241,10 @@ void tspsApp::initVideoInput(){
         
         if ( !cameraState == CAMERA_KINECT){            
             kinect.init();
+            camWidth = kinect.getWidth();
+            camHeight = kinect.getHeight();
+            tilt        = 0;
+            
             bool bOpened = kinect.open();
             if (bOpened){
                 cameraState = CAMERA_KINECT;

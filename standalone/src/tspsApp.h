@@ -61,6 +61,7 @@ class tspsApp : public ofBaseApp, public PersonListener {
         // kinect or live video?
         bool bKinect, bKinectConnected;
         int cameraState;
+        int tilt; //kinect only tilt var
     
 		#else
 		  ofVideoPlayer 		vidPlayer;

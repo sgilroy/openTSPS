@@ -562,7 +562,6 @@ namespace ofxTSPS {
         //ofxCvTrackedBlob blob = persistentTracker.getById( id );
         Person* newPerson = new Person(id, index, contourFinder);//order, blob);
         trackedPeople[id] = newPerson;
-        cout<<"sweet! "<<id<<":"<<trackedPeople[id]<<endl;
         //trackedPeople.push_back( newPerson );
         if(eventListener != NULL){
             eventListener->personEntered(newPerson, &scene);
