@@ -31,7 +31,7 @@ public class TSPS
 
 	PApplet parent;
 	OscP5 receiver;
-	public Hashtable<Integer, TSPSPerson> people;
+	public final Hashtable<Integer, TSPSPerson> people;
 
 	Method personEntered;
 	Method personUpdated;
@@ -52,13 +52,16 @@ public class TSPS
 		p.boundingRect.width = theOscMessage.get(8).floatValue();
 		p.boundingRect.height = theOscMessage.get(9).floatValue(); 
 		p.opticalFlow.x = theOscMessage.get(10).floatValue(); 
-		p.opticalFlow.y = theOscMessage.get(11).floatValue(); 
-		p.contours.clear();
-		for (int i=12; i<theOscMessage.arguments().length-1; i+=2){
-			PVector point = new PVector();
-			point.x = theOscMessage.get(i).floatValue();
-			point.y = theOscMessage.get(i+1).floatValue();
-			p.contours.add(point);
+		p.opticalFlow.y = theOscMessage.get(11).floatValue();
+		synchronized (p.contours)
+		{
+			p.contours.clear();
+			for (int i=12; i<theOscMessage.arguments().length - 1; i+=2){
+				PVector point = new PVector();
+				point.x = theOscMessage.get(i).floatValue();
+				point.y = theOscMessage.get(i+1).floatValue();
+				p.contours.add(point);
+			}
 		}
 	}
 
@@ -143,13 +146,19 @@ public class TSPS
 
 			callPersonLeft(p);
 
-			people.remove(p.id);
+			synchronized (people)
+			{
+				people.remove(p.id);
+			}
 		}
 	}
 
 	private void callPersonEntered( TSPSPerson p )
 	{
-		people.put(p.id, p);	
+		synchronized (people)
+		{
+			people.put(p.id, p);
+		}
 		if (personEntered != null) {
 			try {
 				personEntered.invoke(parent, new Object[] { p });
@@ -199,4 +208,4 @@ public class TSPS
 			}
 		}
 	}
-};
+}

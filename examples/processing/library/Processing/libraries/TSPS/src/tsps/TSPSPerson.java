@@ -14,7 +14,7 @@ public class TSPSPerson
 	public Rectangle boundingRect;
 	public boolean dead;
 	
-	public ArrayList<PVector> contours;
+	public final ArrayList<PVector> contours;
 	
 	public TSPSPerson(){
 		boundingRect = new Rectangle();
@@ -32,6 +32,14 @@ public class TSPSPerson
 		centroid = p.centroid;
 		velocity = p.velocity;
 		opticalFlow = p.opticalFlow;
-		contours = p.contours;
+
+		synchronized (contours)
+		{
+			contours.clear();
+			for (PVector point : contours)
+			{
+				contours.add(point);
+			}
+		}
 	}
-};
+}
